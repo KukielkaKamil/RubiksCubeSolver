@@ -204,3 +204,8 @@ class RubiksCube:
             case 11:
                 self.U_prime()
                 print('U\'')
+
+    def scramble(self, moves):
+        for i in range(moves):
+            move = rnd.randint(0,11)
+            self.make_move(move)
