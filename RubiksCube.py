@@ -21,11 +21,27 @@ class RubiksCube:
     }
     _attached_indices = {
         FACE.FRONT:[(45,46,47),(9,12,15),(42,43,44),(29,32,35)],
-        FACE.RIGHT:[(47,50,53),(20,23,26),(42,43,44),(2,5,8)],
+        FACE.RIGHT:[(47,50,53),(18,21,24),(38,41,44),(2,5,8)],
         FACE.BACK:[(51,52,53),(27,30,33),(36,37,38),(11,14,17)],
-        FACE.LEFT:[(45,48,51),(0,3,6),(36,39,42),(18,21,24)],
+        FACE.LEFT:[(45,48,51),(0,3,6),(36,39,42),(20,23,26)],
         FACE.TOP:[(0,1,2),(9,10,11),(18,19,20),(27,28,29)],
         FACE.BOTTOM:[(24,25,26),(15,16,17),(6,7,8),(33,34,35)]
+    }
+    _flip_colors_clockwise = {
+        FACE.FRONT:(1,-1,1,-1),
+        FACE.RIGHT:(1,-1,-1,1),
+        FACE.BACK:(-1,1,-1,1),
+        FACE.LEFT:(-1,1,1,-1),
+        FACE.TOP:(1,1,1,1),
+        FACE.BOTTOM:(1,1,1,1),
+    }
+    _flip_colors_Counter_clockwise = {
+        FACE.FRONT:(-1,1,-1,1),
+        FACE.RIGHT:(-1,-1,1,1),
+        FACE.BACK:(1,-1,1,-1),
+        FACE.LEFT:(1,1,-1,-1),
+        FACE.TOP:(1,1,1,1),
+        FACE.BOTTOM:(1,1,1,1),
     }
     def __init__(self):
         self.cube = list("🟩🟩🟩🟩🟩🟩🟩🟩🟩🟥🟥🟥🟥🟥🟥🟥🟥🟥🟦🟦🟦🟦🟦🟦🟦🟦🟦🟧🟧🟧🟧🟧🟧🟧🟧🟧⬜⬜⬜⬜⬜⬜⬜⬜⬜🟨🟨🟨🟨🟨🟨🟨🟨🟨")
@@ -51,15 +67,25 @@ class RubiksCube:
         self.print_face("Up", 36)
         self.print_face("Down", 45)
     
+    def _get_adj_index(self,x, i):
+        if x == 1:
+            return i
+        elif x == -1:
+            return 2 - i
+    
     def _rotate_face_clockwise(self, face):
         # Rotate the specified face clockwise
         start = face.value * 9
         original_cube = self.cube.copy()
         for i in range(3):
-            self.cube[self._attached_indices[face][0][i]] = original_cube[self._attached_indices[face][1][-1 * (i+1)]]
-            self.cube[self._attached_indices[face][1][i]] = original_cube[self._attached_indices[face][2][i]]
-            self.cube[self._attached_indices[face][2][i]] = original_cube[self._attached_indices[face][3][-1 * (i+1)]]
-            self.cube[self._attached_indices[face][3][i]] = original_cube[self._attached_indices[face][0][i]]
+            index1 = self._get_adj_index(self._flip_colors_clockwise[face][0],i)
+            index2 = self._get_adj_index(self._flip_colors_clockwise[face][1],i)
+            index3 = self._get_adj_index(self._flip_colors_clockwise[face][2],i)
+            index4 = self._get_adj_index(self._flip_colors_clockwise[face][3],i)
+            self.cube[self._attached_indices[face][0][i]] = original_cube[self._attached_indices[face][1][index2]]
+            self.cube[self._attached_indices[face][1][i]] = original_cube[self._attached_indices[face][2][index3]]
+            self.cube[self._attached_indices[face][2][i]] = original_cube[self._attached_indices[face][3][index4]]
+            self.cube[self._attached_indices[face][3][i]] = original_cube[self._attached_indices[face][0][index1]]
 
             for j in range(3):
                 self.cube[start + i * 3 + j] = original_cube[start + (2 - j) * 3 + i]
@@ -69,10 +95,14 @@ class RubiksCube:
         start = face.value * 9
         original_cube = self.cube.copy()
         for i in range(3):
-            self.cube[self._attached_indices[face][0][i]] = original_cube[(self._attached_indices[face][3][-1 * (i+1)])]
-            self.cube[self._attached_indices[face][3][i]] = original_cube[self._attached_indices[face][2][i]]
-            self.cube[self._attached_indices[face][2][i]] = original_cube[self._attached_indices[face][1][-1 * (i+1)]]
-            self.cube[self._attached_indices[face][1][i]] = original_cube[self._attached_indices[face][0][i]]
+            index1 = self._get_adj_index(self._flip_colors_Counter_clockwise[face][0],i)
+            index2 = self._get_adj_index(self._flip_colors_Counter_clockwise[face][1],i)
+            index3 = self._get_adj_index(self._flip_colors_Counter_clockwise[face][2],i)
+            index4 = self._get_adj_index(self._flip_colors_Counter_clockwise[face][3],i)
+            self.cube[self._attached_indices[face][0][i]] = original_cube[self._attached_indices[face][3][index4]]
+            self.cube[self._attached_indices[face][3][i]] = original_cube[self._attached_indices[face][2][index3]]
+            self.cube[self._attached_indices[face][2][i]] = original_cube[self._attached_indices[face][1][index2]]
+            self.cube[self._attached_indices[face][1][i]] = original_cube[self._attached_indices[face][0][index1]]
     
             for j in range(3):
                 self.cube[start + i * 3 + j] = original_cube[start + j * 3 + (2 - i)]
@@ -168,3 +198,21 @@ class RubiksCube:
         for i in range(moves):
             move = rnd.randint(0,11)
             self.make_move(move)
+
+cube = RubiksCube()
+# cube.cube[2] = 'T'
+# cube.cube[47] = 'T'
+# cube.cube[18] = 'T'
+# cube.cube[38] = 'T'
+# cube.print_cube()
+# cube.F_prime()
+
+# cube.D()
+# cube.F()
+# cube.R_prime()
+cube.scramble(10)
+# cube.R_prime()
+# cube.F()
+# cube.R()
+
+cube.print_cube()
