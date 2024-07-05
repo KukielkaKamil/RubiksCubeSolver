@@ -3,7 +3,7 @@ from copy import deepcopy
 import random as rnd
 
 
-## Does not work... YET
+## This method does not yet and probably won't be continued
 class RubiksSolver:
     def __init__(self, cube):
         self.cube = cube

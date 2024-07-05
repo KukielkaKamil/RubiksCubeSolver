@@ -77,6 +77,7 @@ def wc_pattern_3(cube):
                     available_moves.remove(bmove)
             return True
     return False
+##More Patterns/better logic to be added
 
 max = 100
 moves = 0
