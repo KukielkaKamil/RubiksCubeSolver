@@ -4,6 +4,7 @@ import random as rnd
 cube = rb.RubiksCube()
 faces = rb.FACE
 cube.scramble(100)
+cube.total_moves=0
 available_moves = [0,1,2,3,4,5,6,7,8,9]
 block_moves = {
         '🟩': (4,5),
@@ -11,6 +12,21 @@ block_moves = {
         '🟦':(6,7),
         '🟧':(2,3)
     }
+
+cross_edges={
+    (7,46): (),
+    (34,48):(8,),
+    (16,50):(9,),
+    (25,52):(8,8),
+    (5,12):(1,9,0),
+    (3,32):(2,8,3),
+    (23,30):(3,8,2),
+    (21,14):(0,9,1),
+    (39,28):(3,3,8),
+    (41,10):(1,1,9),
+    (37,19):(6,6,8,8),
+    (43,1):(4,4)
+}
 # Checking if cube has white cross
 def hasWhiteCross(cube):
     patter_positions = [(37,19,'🟦'),(41,10,'🟥'),(43,1,'🟩'),(39,28,'🟧')]
@@ -79,6 +95,24 @@ def wc_pattern_3(cube):
     return False
 ##More Patterns/better logic to be added
 
+def solve_cross(cube):
+    colors = ['🟩', '🟧', '🟦','🟥']
+
+    for color in colors:
+        for (i, j), values in cross_edges.items():
+            if (cube.cube[i], cube.cube[j]) in [('⬜', color), (color, '⬜')]:
+                cube.do_moves(values)
+                # cube.print_cube()
+
+                if cube.cube[46] == '⬜':
+                    cube.do_moves((4, 4))
+                else:
+                    cube.do_moves((1, 8, 0, 5))
+                    
+                cube.make_move(11)
+                cube.print_cube()
+                break
+
 max = 100
 moves = 0
 while not hasWhiteCross(cube):
@@ -96,8 +130,9 @@ while not hasWhiteCross(cube):
     elif wc_simple_patterns(cube):
         continue
     else:
-        x = rnd.randint(0,len(available_moves)-1)
-        cube.make_move(available_moves[x])
+        solve_cross(cube)
         # cube.scramble(1)
 
 cube.print_cube()
+
+print("TOTAL MOVES: ",cube.total_moves)

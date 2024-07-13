@@ -45,7 +45,8 @@ class RubiksCube:
     }
     def __init__(self):
         self.cube = list("🟩🟩🟩🟩🟩🟩🟩🟩🟩🟥🟥🟥🟥🟥🟥🟥🟥🟥🟦🟦🟦🟦🟦🟦🟦🟦🟦🟧🟧🟧🟧🟧🟧🟧🟧🟧⬜⬜⬜⬜⬜⬜⬜⬜⬜🟨🟨🟨🟨🟨🟨🟨🟨🟨")
-    
+        self.total_moves=0
+
     def face(self, face : FACE):
         start = face.value * 9
         end = start + 9
@@ -156,6 +157,7 @@ class RubiksCube:
         self._rotate_face_counter_clockwise(FACE.TOP)
     
     def make_move(self, move):
+        self.total_moves += 1
         match move:
             case 0:
                 self.R()
@@ -197,6 +199,10 @@ class RubiksCube:
     def scramble(self, moves):
         for i in range(moves):
             move = rnd.randint(0,11)
+            self.make_move(move)
+
+    def do_moves(self,moves):
+        for move in moves:
             self.make_move(move)
 
 cube = RubiksCube()
