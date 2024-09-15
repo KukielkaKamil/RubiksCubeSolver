@@ -135,4 +135,5 @@ while not hasWhiteCross(cube):
 
 cube.print_cube()
 
+
 print("TOTAL MOVES: ",cube.total_moves)

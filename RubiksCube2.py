@@ -47,14 +47,9 @@ class RubiksCube:
     }
 
     _moves_shifts = {
-        FACE.FRONT: (0,0,0,0,0,0,0,0,0,0,0,0),
-        FACE.RIGHT:(6,6,2,2,-4,-4,-4,-4,0,0,0,0),
-        FACE.LEFT:(4,4,4,4,-2,-2,-6,-6,0,0,0,0),
-        FACE.BACK:(2,2,-2,-2,2,2,-2,-2,0,0,0,0),
-        FACE.TOP:(0,0,0,0,6,6,2,2,-4,-4,-4,-4),
-        FACE.BOTTOM:(0,0,0,0,4,4,4,4,-2,-2,-6,-6)
+        FACE.FRONT: (0,0,0,0,0,0,0,0,0,0,0),
+        FACE.RIGHT:(6,6,2,2,)
     }
-
 
     def __init__(self):
         self.cube = list(
@@ -88,13 +83,6 @@ class RubiksCube:
             return i
         elif x == -1:
             return 2 - i
-        
-    def _spin_face_clockwise(self,face: FACE):
-        start = face.value * 9
-        original_cube = self.cube.copy()
-        for i in range(3):
-            for j in range(3):
-                self.cube[start + i * 3 + j] = original_cube[start + (2 - j) * 3 + i]
 
     def _rotate_face_clockwise(self, face):
         # Rotate the specified face clockwise
@@ -120,13 +108,6 @@ class RubiksCube:
 
             for j in range(3):
                 self.cube[start + i * 3 + j] = original_cube[start + (2 - j) * 3 + i]
-
-    def _spin_face_counter_clockwise(self,face: FACE):
-        start = face.value * 9
-        original_cube = self.cube.copy()
-        for i in range(3):
-            for j in range(3):
-                self.cube[start + i * 3 + j] = original_cube[start + j * 3 + (2 - i)]
 
     def _rotate_face_counter_clockwise(self, face: FACE):
         # Rotate the specified face counter-clockwise
@@ -157,6 +138,7 @@ class RubiksCube:
             self.cube[self._attached_indices[face][1][i]] = original_cube[
                 self._attached_indices[face][0][index1]
             ]
+
             for j in range(3):
                 self.cube[start + i * 3 + j] = original_cube[start + j * 3 + (2 - i)]
 
@@ -208,7 +190,7 @@ class RubiksCube:
         # Rotate the up face counterclockwise
         self._rotate_face_counter_clockwise(FACE.TOP)
 
-    def do_move(self, move):
+    def move(self, move):
         self.total_moves += 1
         match move:
             case 0:
@@ -249,51 +231,6 @@ class RubiksCube:
                 print("U'")
 
     def make_move(self, move):
-        move += self._moves_shifts[self.rotation][move]
-        self.do_move(move)
-
-
-    def rotate_y(self, times=1):
-        # Normalize times to be within [0, 3] since 4 rotations = no rotation
-        times = times % 4
-
-        for _ in range(times):
-            # Rotate FRONT -> RIGHT -> BACK -> LEFT
-            front = self.cube[0:9]
-            right = self.cube[9:18]
-            back = self.cube[18:27]
-            left = self.cube[27:36]
-
-            self.cube[9:18] = front  # RIGHT = FRONT
-            self.cube[18:27] = right  # BACK = RIGHT
-            self.cube[27:36] = back   # LEFT = BACK
-            self.cube[0:9] = left     # FRONT = LEFT
-
-            # Rotate the TOP and BOTTOM faces
-            self._spin_face_clockwise(FACE.TOP)
-            self._spin_face_counter_clockwise(FACE.BOTTOM)
-
-            # print(self._attached_faces[self.rotation][1])
-
-    def rotate_x(self, times=1):
-        # Normalize times to be within [0, 3] since 4 rotations = no rotation
-        times = times % 4
-
-        for _ in range(times):
-            # Rotate TOP -> FRONT -> BOTTOM -> BACK
-            top = self.cube[36:45]
-            front = self.cube[0:9]
-            bottom = self.cube[45:54]
-            back = self.cube[18:27]
-
-            self.cube[0:9] = top  # FRONT = TOP
-            self.cube[45:54] = front  # BOTTOM = FRONT
-            self.cube[18:27] = bottom  # BACK = BOTTOM
-            self.cube[36:45] = back  # TOP = BACK
-
-            # Rotate the LEFT and RIGHT faces
-            self._spin_face_clockwise(FACE.LEFT)
-            self._spin_face_counter_clockwise(FACE.RIGHT)
 
 
     def scramble(self, moves):
@@ -302,12 +239,26 @@ class RubiksCube:
             self.make_move(move)
 
     def do_moves(self, moves):
-        if isinstance(moves, int): self.make_move(moves)
-        else:
-            for move in moves:
-                self.make_move(move)
+        for move in moves:
+            self.make_move(move)
 
-# cube = RubiksCube()
+
+cube = RubiksCube()
+# cube.cube[2] = 'T'
+# cube.cube[47] = 'T'
+# cube.cube[18] = 'T'
+# cube.cube[38] = 'T'
 # cube.print_cube()
-# cube.rotate_y()
-# cube.print_cube()
+# cube.F_prime()
+
+# cube.D()
+# cube.F()
+# cube.R_prime()
+cube.scramble(10)
+# cube.R_prime()
+# cube.F()
+# cube.R()
+
+cube.print_cube()
+
+print(FACE.TOP.name)    

@@ -33,6 +33,17 @@ fl_corners={
 
 }
 
+sl_corners={
+    (7,46):(),
+    (34,48):(8,),
+    (16,50):(9,),
+    (25,52):(8,8),
+    (5,12):(0,5,1,4,1,9,0,8),
+    (3,32):(2,4,3,5,3,8,2,9,3,8,8),
+    # (21,14):(0,9,1,7,1,6,0),
+    # (23,30):(2,8,3,6,3,7,2)
+}
+
 
 # Checking if cube has white cross
 def hasWhiteCross(cube):
@@ -74,7 +85,6 @@ def solve_corners(cube):
             if correct_corner(i, j, l, color1, color2):
                 print(f"Found corner at positions {i}, {j}, {l} with colors: {cube.cube[i]}, {cube.cube[j]}, {cube.cube[l]}")
                 cube.do_moves(values)
-
                 if cube.cube[8] == '⬜':
                     cube.do_moves((4, 8, 5))
                 elif cube.cube[47] == '⬜':
@@ -90,10 +100,32 @@ def solve_corners(cube):
         cube.print_cube()
         cube.make_move(11)
 
+def corect_corner_2(i,j,color1,color2):
+    return {i,j} == {color1,color2}
+
+def solve_second_layer(cube):
+    colors = [('🟥','🟩'), ('🟩', '🟧'), ('🟧', '🟦'), ('🟦', '🟥')]
+
+    for color1, color2 in colors:
+        for (i, j), values in sl_corners.items():
+            if corect_corner_2(cube.cube[i],cube.cube[j],color1,color2):
+                print("RUCHY "+ str(i)+' '+ str(j))
+                cube.do_moves(values)
+                moves = (9,1,8,0,5,0,4,1) if cube.cube[7] == color2 \
+                else (8,8,0,5,1,4,1,9,0)
+                print(cube.cube[7])
+                cube.do_moves(moves)
+                cube.rotate_y()
+                break
+
+
+
+
         
 print("START")
 solve_cross(cube)
 solve_corners(cube)
+solve_second_layer(cube)
 print("KONIEC")
 cube.print_cube()
 
