@@ -213,40 +213,40 @@ class RubiksCube:
         match move:
             case 0:
                 self.R()
-                print("R")
+                # print("R")
             case 1:
                 self.R_prime()
-                print("R'")
+                # print("R'")
             case 2:
                 self.L()
-                print("L")
+                # print("L")
             case 3:
                 self.L_prime()
-                print("L'")
+                # print("L'")
             case 4:
                 self.F()
-                print("F")
+                # print("F")
             case 5:
                 self.F_prime()
-                print("F'")
+                # print("F'")
             case 6:
                 self.B()
-                print("B")
+                # print("B")
             case 7:
                 self.B_prime()
-                print("B'")
+                # print("B'")
             case 8:
                 self.D()
-                print("D")
+                # print("D")
             case 9:
                 self.D_prime()
-                print("D'")
+                # print("D'")
             case 10:
                 self.U()
-                print("U")
+                # print("U")
             case 11:
                 self.U_prime()
-                print("U'")
+                # print("U'")
 
     def make_move(self, move):
         move += self._moves_shifts[self.rotation][move]
@@ -302,7 +302,7 @@ class RubiksCube:
             self.make_move(move)
 
     def do_moves(self, moves):
-        if isinstance(moves, int): self.make_move(moves)
+        if isinstance(moves, int): self.make_move(moves )
         else:
             for move in moves:
                 self.make_move(move)
