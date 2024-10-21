@@ -1,5 +1,4 @@
 from enum import Enum
-import numpy as np
 import random as rnd
 
 
@@ -13,55 +12,20 @@ class FACE(Enum):
 
 
 class RubiksCube:
-    _attached_faces = {
-        FACE.FRONT: (FACE.BOTTOM, FACE.RIGHT, FACE.TOP, FACE.LEFT),
-        FACE.RIGHT: (FACE.BOTTOM, FACE.BACK, FACE.TOP, FACE.FRONT),
-        FACE.BACK: (FACE.BOTTOM, FACE.LEFT, FACE.TOP, FACE.RIGHT),
-        FACE.LEFT: (FACE.BOTTOM, FACE.FRONT, FACE.TOP, FACE.BACK),
-        FACE.TOP: (FACE.FRONT, FACE.RIGHT, FACE.BACK, FACE.LEFT),
-        FACE.BOTTOM: (FACE.BACK, FACE.RIGHT, FACE.FRONT, FACE.LEFT),
-    }
     _attached_indices = {
-        FACE.FRONT: [(45, 46, 47), (9, 12, 15), (42, 43, 44), (29, 32, 35)],
-        FACE.RIGHT: [(47, 50, 53), (18, 21, 24), (38, 41, 44), (2, 5, 8)],
-        FACE.BACK: [(51, 52, 53), (27, 30, 33), (36, 37, 38), (11, 14, 17)],
-        FACE.LEFT: [(45, 48, 51), (0, 3, 6), (36, 39, 42), (20, 23, 26)],
-        FACE.TOP:[(0, 1, 2), (9, 10, 11), (18, 19, 20), (27, 28, 29)],
-        FACE.BOTTOM: [(24, 25, 26), (15, 16, 17), (6, 7, 8), (33, 34, 35)],
-    }
-    _flip_colors_clockwise = {
-        FACE.FRONT: (1, -1, 1, -1),
-        FACE.RIGHT: (1, -1, -1, 1),
-        FACE.BACK: (-1, 1, -1, 1),
-        FACE.LEFT: (-1, 1, 1, -1),
-        FACE.TOP: (1, 1, 1, 1),
-        FACE.BOTTOM: (1, 1, 1, 1),
-    }
-    _flip_colors_Counter_clockwise = {
-        FACE.FRONT: (-1, 1, -1, 1),
-        FACE.RIGHT: (-1, -1, 1, 1),
-        FACE.BACK: (1, -1, 1, -1),
-        FACE.LEFT: (1, 1, -1, -1),
-        FACE.TOP: (1, 1, 1, 1),
-        FACE.BOTTOM: (1, 1, 1, 1),
-    }
-
-    _moves_shifts = {
-        FACE.FRONT: (0,0,0,0,0,0,0,0,0,0,0),
-        FACE.RIGHT:(6,6,2,2,)
+        FACE.FRONT: [(45, 46, 47), (9, 12, 15), (42, 43, 44), (29, 32, 35)],  # Down, Right, Up, Left
+        FACE.RIGHT: [(47, 50, 53), (18, 21, 24), (38, 41, 44), (2, 5, 8)],    # Down, Back, Up, Front
+        FACE.BACK: [(51, 52, 53), (27, 30, 33), (36, 37, 38), (11, 14, 17)],  # Down, Left, Up, Right
+        FACE.LEFT: [(45, 48, 51), (0, 3, 6), (36, 39, 42), (20, 23, 26)],     # Down, Front, Up, Back
+        FACE.TOP: [(0, 1, 2), (9, 10, 11), (18, 19, 20), (27, 28, 29)],       # Front, Right, Back, Left
+        FACE.BOTTOM: [(24, 25, 26), (15, 16, 17), (6, 7, 8), (33, 34, 35)],  # Front, Right, Back, Left
     }
 
     def __init__(self):
         self.cube = list(
-            "🟩🟩🟩🟩🟩🟩🟩🟩🟩🟥🟥🟥🟥🟥🟥🟥🟥🟥🟦🟦🟦🟦🟦🟦🟦🟦🟦🟧🟧🟧🟧🟧🟧🟧🟧🟧⬜⬜⬜⬜⬜⬜⬜⬜⬜🟨🟨🟨🟨🟨🟨🟨🟨🟨"
+            "GGGGGGGGGRRRRRRRRRBBBBBBBBBOOOOOOOOOWWWWWWWWWYYYYYYYYY"
         )
         self.total_moves = 0
-        self.rotation = FACE.FRONT
-
-    def face(self, face: FACE):
-        start = face.value * 9
-        end = start + 9
-        return self.cube[start:end]
 
     def print_face(self, face_name, start_index):
         print(f"{face_name}:")
@@ -70,7 +34,6 @@ class RubiksCube:
         print()
 
     def print_cube(self):
-        # Represent the Rubik's Cube as a string
         self.print_face("Front", 0)
         self.print_face("Right", 9)
         self.print_face("Back", 18)
@@ -78,187 +41,93 @@ class RubiksCube:
         self.print_face("Up", 36)
         self.print_face("Down", 45)
 
-    def _get_adj_index(self, x, i):
-        if x == 1:
-            return i
-        elif x == -1:
-            return 2 - i
-
-    def _rotate_face_clockwise(self, face):
-        # Rotate the specified face clockwise
+    def _rotate_face(self, face: FACE, clockwise=True):
         start = face.value * 9
         original_cube = self.cube.copy()
-        for i in range(3):
-            index1 = self._get_adj_index(self._flip_colors_clockwise[face][0], i)
-            index2 = self._get_adj_index(self._flip_colors_clockwise[face][1], i)
-            index3 = self._get_adj_index(self._flip_colors_clockwise[face][2], i)
-            index4 = self._get_adj_index(self._flip_colors_clockwise[face][3], i)
-            self.cube[self._attached_indices[face][0][i]] = original_cube[
-                self._attached_indices[face][1][index2]
-            ]
-            self.cube[self._attached_indices[face][1][i]] = original_cube[
-                self._attached_indices[face][2][index3]
-            ]
-            self.cube[self._attached_indices[face][2][i]] = original_cube[
-                self._attached_indices[face][3][index4]
-            ]
-            self.cube[self._attached_indices[face][3][i]] = original_cube[
-                self._attached_indices[face][0][index1]
-            ]
 
-            for j in range(3):
-                self.cube[start + i * 3 + j] = original_cube[start + (2 - j) * 3 + i]
+        # Rotate the face itself
+        if clockwise:
+            # Clockwise rotation of the face
+            for i in range(3):
+                for j in range(3):
+                    self.cube[start + i * 3 + j] = original_cube[start + (2 - j) * 3 + i]
+        else:
+            # Counterclockwise rotation of the face
+            for i in range(3):
+                for j in range(3):
+                    self.cube[start + i * 3 + j] = original_cube[start + j * 3 + (2 - i)]
 
-    def _rotate_face_counter_clockwise(self, face: FACE):
-        # Rotate the specified face counter-clockwise
-        start = face.value * 9
-        original_cube = self.cube.copy()
-        for i in range(3):
-            index1 = self._get_adj_index(
-                self._flip_colors_Counter_clockwise[face][0], i
-            )
-            index2 = self._get_adj_index(
-                self._flip_colors_Counter_clockwise[face][1], i
-            )
-            index3 = self._get_adj_index(
-                self._flip_colors_Counter_clockwise[face][2], i
-            )
-            index4 = self._get_adj_index(
-                self._flip_colors_Counter_clockwise[face][3], i
-            )
-            self.cube[self._attached_indices[face][0][i]] = original_cube[
-                self._attached_indices[face][3][index4]
-            ]
-            self.cube[self._attached_indices[face][3][i]] = original_cube[
-                self._attached_indices[face][2][index3]
-            ]
-            self.cube[self._attached_indices[face][2][i]] = original_cube[
-                self._attached_indices[face][1][index2]
-            ]
-            self.cube[self._attached_indices[face][1][i]] = original_cube[
-                self._attached_indices[face][0][index1]
-            ]
+        # Rotate the adjacent edges
+        idx1, idx2, idx3, idx4 = self._attached_indices[face]
 
-            for j in range(3):
-                self.cube[start + i * 3 + j] = original_cube[start + j * 3 + (2 - i)]
+        if clockwise:
+            # Clockwise rotation adjustment
+            temp = [self.cube[idx4[i]] for i in range(3)]  # Store the left edge (from left face)
+            for i in range(3):
+                self.cube[idx4[i]] = original_cube[idx1[i]]  # Left -> Front
+                self.cube[idx1[i]] = original_cube[idx2[i]]  # Front -> Right
+                self.cube[idx2[i]] = original_cube[idx3[i]]  # Right -> Back
+                self.cube[idx3[i]] = temp[i]  # Back -> Left
+        else:
+            # Counterclockwise rotation adjustment
+            temp = [self.cube[idx1[i]] for i in range(3)]  # Store the front edge (from front face)
+            for i in range(3):
+                self.cube[idx1[i]] = original_cube[idx4[i]]  # Left -> Front
+                self.cube[idx2[i]] = original_cube[idx1[i]]  # Front -> Right
+                self.cube[idx3[i]] = original_cube[idx2[i]]  # Right -> Back
+                self.cube[idx4[i]] = temp[i]  # Back -> Left
 
-    def F(self):
-        # Rotate the front face clockwise
-        self._rotate_face_clockwise(FACE.FRONT)
-
-    def F_prime(self):
-        # Rotate the front face clockwise
-        self._rotate_face_counter_clockwise(FACE.FRONT)
-
-    def L(self):
-        # Rotate the left face clockwise
-        self._rotate_face_clockwise(FACE.LEFT)
-
-    def L_prime(self):
-        # Rotate the left face counterclockwise
-        self._rotate_face_counter_clockwise(FACE.LEFT)
-
-    def R(self):
-        # Rotate the right face clockwise
-        self._rotate_face_clockwise(FACE.RIGHT)
-
-    def R_prime(self):
-        # Rotate the right face counterclockwise
-        self._rotate_face_counter_clockwise(FACE.RIGHT)
-
-    def B(self):
-        # Rotate the back face clockwise
-        self._rotate_face_clockwise(FACE.BACK)
-
-    def B_prime(self):
-        # Rotate the back face counterclockwise
-        self._rotate_face_counter_clockwise(FACE.BACK)
-
-    def D(self):
-        # Rotate the down face clockwise
-        self._rotate_face_clockwise(FACE.BOTTOM)
-
-    def D_prime(self):
-        # Rotate the down face counterclockwise
-        self._rotate_face_counter_clockwise(FACE.BOTTOM)
-
-    def U(self):
-        # Rotate the up face clockwise
-        self._rotate_face_clockwise(FACE.TOP)
-
-    def U_prime(self):
-        # Rotate the up face counterclockwise
-        self._rotate_face_counter_clockwise(FACE.TOP)
-
-    def move(self, move):
-        self.total_moves += 1
-        match move:
-            case 0:
-                self.R()
-                print("R")
-            case 1:
-                self.R_prime()
-                print("R'")
-            case 2:
-                self.L()
-                print("L")
-            case 3:
-                self.L_prime()
-                print("L'")
-            case 4:
-                self.F()
-                print("F")
-            case 5:
-                self.F_prime()
-                print("F'")
-            case 6:
-                self.B()
-                print("B")
-            case 7:
-                self.B_prime()
-                print("B'")
-            case 8:
-                self.D()
-                print("D")
-            case 9:
-                self.D_prime()
-                print("D'")
-            case 10:
-                self.U()
-                print("U")
-            case 11:
-                self.U_prime()
-                print("U'")
-
-    def make_move(self, move):
-
+    def rotate(self, move):
+        face, clockwise = move[0], move[-1] == "'"
+        moves = {
+            "F": FACE.FRONT,
+            "B": FACE.BACK,
+            "R": FACE.RIGHT,
+            "L": FACE.LEFT,
+            "U": FACE.TOP,
+            "D": FACE.BOTTOM
+        }
+        if face in moves:
+            self._rotate_face(moves[face], not clockwise)  # Invert for counterclockwise
+            self.total_moves += 1
 
     def scramble(self, moves):
-        for i in range(moves):
-            move = rnd.randint(0, 11)
-            self.make_move(move)
+        last_move = None
+        for _ in range(moves):
+            move_list = ["R", "R'", "L", "L'", "F", "F'", "B", "B'", "U", "U'", "D", "D'"]
+            if last_move:
+                # Avoid undoing the previous move
+                move_list = [m for m in move_list if m[0] != last_move[0]]
+            move = rnd.choice(move_list)
+            self.rotate(move)
+            last_move = move
+
+    def rotate_y(self, times=1):
+        times = times % 4
+        for _ in range(times):
+            front, right, back, left = self.cube[:9], self.cube[9:18], self.cube[18:27], self.cube[27:36]
+            self.cube[:9], self.cube[9:18], self.cube[18:27], self.cube[27:36] = left, front, right, back
+            self._rotate_face(FACE.TOP, True)
+            self._rotate_face(FACE.BOTTOM, False)
+
+    def rotate_x(self, times=1):
+        times = times % 4
+        for _ in range(times):
+            top, front, bottom, back = self.cube[36:45], self.cube[:9], self.cube[45:54], self.cube[18:27]
+            self.cube[:9], self.cube[36:45], self.cube[45:54], self.cube[18:27] = top, back, front, bottom
+            self._rotate_face(FACE.LEFT, True)
+            self._rotate_face(FACE.RIGHT, False)
 
     def do_moves(self, moves):
-        for move in moves:
-            self.make_move(move)
+        if isinstance(moves, list):
+            for move in moves:
+                self.rotate(move)
+        else:
+            self.rotate(moves)
 
 
+# Example of usage
 cube = RubiksCube()
-# cube.cube[2] = 'T'
-# cube.cube[47] = 'T'
-# cube.cube[18] = 'T'
-# cube.cube[38] = 'T'
-# cube.print_cube()
-# cube.F_prime()
-
-# cube.D()
-# cube.F()
-# cube.R_prime()
-cube.scramble(10)
-# cube.R_prime()
-# cube.F()
-# cube.R()
-
+# Perform specific moves
+cube.do_moves(["R", "R", "F","L'"])
 cube.print_cube()
-
-print(FACE.TOP.name)    

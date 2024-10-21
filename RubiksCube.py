@@ -248,6 +248,46 @@ class RubiksCube:
                 self.U_prime()
                 # print("U'")
 
+    def undo_move(self, move):
+        self.total_moves += 1
+        match move:
+            case 0:
+                self.R_prime()
+                # print("R")
+            case 1:
+                self.R()
+                # print("R'")
+            case 2:
+                self.L_prime()
+                # print("L")
+            case 3:
+                self.L()
+                # print("L'")
+            case 4:
+                self.F_prime()
+                # print("F")
+            case 5:
+                self.F()
+                # print("F'")
+            case 6:
+                self.B_prime()
+                # print("B")
+            case 7:
+                self.B()
+                # print("B'")
+            case 8:
+                self.D_prime()
+                # print("D")
+            case 9:
+                self.D()
+                # print("D'")
+            case 10:
+                self.U_prime()
+                # print("U")
+            case 11:
+                self.U()
+                # print("U'")
+
     def make_move(self, move):
         move += self._moves_shifts[self.rotation][move]
         self.do_move(move)
@@ -307,7 +347,29 @@ class RubiksCube:
             for move in moves:
                 self.make_move(move)
 
-# cube = RubiksCube()
-# cube.print_cube()
-# cube.rotate_y()
-# cube.print_cube()
+    _color_to_int = {
+        "🟩": 0,  # Green
+        "🟥": 1,  # Red
+        "🟦": 2,  # Blue
+        "🟧": 3,  # Orange
+        "⬜": 4,  # White
+        "🟨": 5,  # Yellow
+    }
+
+    def is_solved(self):
+        colors = ["🟩","🟥","🟦","🟧","⬜","🟨"]
+        for i in range(6):
+            face_start = 9*i
+            for j in range(face_start,face_start+9):
+                if self.cube[j] != colors[i]:
+                    return False
+        return True
+
+
+    def encode_state(self):
+        """
+        Encodes the current state of the Rubik's Cube as a list of integers.
+        """
+        return [self._color_to_int[facelet] for facelet in self.cube]
+
+
