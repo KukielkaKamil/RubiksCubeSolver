@@ -366,6 +366,15 @@ class RubiksCube:
         return True
 
 
+    def hasWhiteCross(self):
+        patter_positions = [(37,19,'🟦'),(41,10,'🟥'),(43,1,'🟩'),(39,28,'🟧')]
+
+        for up_pos, adj_pos, adj_col in patter_positions:
+            if self.cube[up_pos] != '⬜' or self.cube[adj_pos] != adj_col:
+                return False
+        return True
+
+
     def encode_state(self):
         """
         Encodes the current state of the Rubik's Cube as a list of integers.
