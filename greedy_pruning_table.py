@@ -9,7 +9,7 @@ import random
 
 MAX_DEPTH = 12
 NUM_CORES = 7  # Adjust based on your machine's capabilities
-DB_PATH = 'kociemba_pruning_phase1.db'
+DB_PATH = 'kociemba_pruning_phase1_tests.db'
 QUEUE_PATH = 'state_queue'  # Path where the queue will be stored
 MOVES = [0,1,2,3,4,5,6,7,8,9,10,11]
 OPPOSITE_MOVES = {
