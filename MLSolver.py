@@ -5,7 +5,7 @@ from RubiksCube import RubiksCube
 env = CubeEnv()
 agent = DQNAgent(input_dim=54,output_dim=12)
 
-agent.load('final_model26.pth')
+agent.load('dqn_rubiks_cube.pth')
 
 agent.epsilon=0.0
 
