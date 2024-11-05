@@ -5,6 +5,8 @@ import threading
 from scenes.cube import cube_to_list
 from helperFunctions.RubiksCube import RubiksCube as rb
 from scenes.cube import CELL_SIZE, GRID_SIZE
+import random
+import math
 
 
 initial_content = ft.Column()
@@ -43,9 +45,12 @@ def change_color(cell:ft.Container,color_symbol):
 
     cell.bgcolor = color
 
+player_container = ft.Container()
 def create_player():
+    global player_container
     bg_grid, bg_cells = create_grid()
     front_grid, front_cells = create_grid()
+
     # vertical_strip, vstrp_cels = create_grid(1,3,3.5,0)
     # horizontal_strip, hstrp_cels = create_grid(3,1,0,3.5)
     for i in range(9):
@@ -54,7 +59,9 @@ def create_player():
 
     grid_stack = ft.Stack(
         controls=[bg_grid, front_grid],
+        animate_rotation = ft.animation.Animation(300)
     )
+    player_container = grid_stack
     player_cells.append(front_cells)
     player_cells.append(bg_cells)
     # player_cells.append(vstrp_cels)
@@ -79,17 +86,24 @@ async def send_request(page):
         initial_content.controls.append(text)
         initial_content.controls.append(player)
         page.update()
-        await asyncio.sleep(3)
-        await player_R(page)
-        await player_R_prime(page)
-        await player_L(page)
-        await player_L_prime(page)
-        await player_U(page)
-        await player_U_prime(page)
-        await player_D(page)
-        await player_D_prime(page)
+        await asyncio.sleep(1)
         
-        # page.update()
+        # posible_moves = ['R','R`','L','L`','U','U`','D','D`']
+        # moves_to_do = random.choices(posible_moves,k=5)
+
+
+        # for move in moves_to_do:
+        #     await play_move(page,move)
+        await player_U(page)
+        await player_D(page)
+        await player_F(page)
+        await player_R(page)
+        await player_B(page)
+
+
+        
+        page.update()
+
 
 def create_grid(height=3,width=3,offset_x=0,offset_y=0):
         grid_cells = []
@@ -230,10 +244,93 @@ async def player_D_prime(page):
     await slide_side(page,indexes,3.5,0)
     player_cube.D_prime()
 
+async def player_F(page):
+    for cell in range(9):
+        player_container.rotate = ft.Rotate(0.5 * math.pi,ft.alignment.center)
+    page.update()
+    await asyncio.sleep(0.3)
+
+    for cell in range(9):
+        player_container.animate_rotation = None
+        player_container.rotate = ft.Rotate(0,ft.alignment.center)
+    page.update()
+    player_cube.F()
+
+    for cell in range(9):
+        player_cells[0][cell].bgcolor = get_color_at(cell)
+        # player_container.animate_rotation = ft.animation.Animation(300)
+
+async def player_F_prime(page):
+    for cell in range(9):
+        player_container.rotate = ft.Rotate(-0.5 * math.pi,ft.alignment.center)
+    page.update()
+    await asyncio.sleep(0.3)
+
+    for cell in range(9):
+        player_container.animate_rotation = None
+        player_container.rotate = ft.Rotate(0,ft.alignment.center)
+    page.update()
+    player_cube.F()
+
+    for cell in range(9):
+        player_cells[0][cell].bgcolor = get_color_at(cell)
+
+async def player_B(page):
+    for cell in range(9):
+        player_container.controls[0].animate_rotation = ft.animation.Animation(300)
+        player_cells[1][cell].offset = ft.Offset(0,0)
+    page.update()
+    await asyncio.sleep(0.1)
+
+    for cell in range(9):
+        player_cells[1][cell].bgcolor = ft.colors.BLACK
+        player_container.controls[0].rotate = ft.Rotate(-0.5 * math.pi,ft.alignment.center)
+    page.update()
+    await asyncio.sleep(0.3)
+
+    player_container.controls[0].animate_rotation = None
+    player_container.controls[0].rotate = ft.Rotate(0,ft.alignment.center)
+    page.update()
+    player_cube.B()
+
+async def player_B_prime(page):
+    for cell in range(9):
+        player_container.controls[0].animate_rotation = ft.animation.Animation(300)
+        player_cells[1][cell].offset = ft.Offset(0,0)
+    page.update()
+    await asyncio.sleep(0.1)
+
+    for cell in range(9):
+        player_cells[1][cell].bgcolor = ft.colors.BLACK
+        player_container.controls[0].rotate = ft.Rotate(0.5 * math.pi,ft.alignment.center)
+    page.update()
+    await asyncio.sleep(0.3)
+
+    player_container.controls[0].animate_rotation = None
+    player_container.controls[0].rotate = ft.Rotate(0,ft.alignment.center)
+    page.update()
+    player_cube.B()
+
+    
+
 async def play_move(page,move):
     match move:
-        case 'R':
-            player_R(page)
+        case "R":
+            await player_R(page)
+        case "R`":
+            await player_R_prime(page)
+        case 'L':
+            await player_L(page)
+        case 'L`':
+            await player_L_prime(page)
+        case 'U':
+            await player_U(page)
+        case 'U`':
+            await player_U_prime(page)
+        case 'D':
+            await player_D(page)
+        case 'D`':
+            await player_D_prime(page)
 
 # async def test():
 #     await asyncio.sleep(3)
