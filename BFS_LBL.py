@@ -113,7 +113,7 @@ def is_goal(cube,goal_state):
             and has_full_white_cross(cube) >= 4 and has_yellow_cross(cube) >= 4 and has_second_layer(cube) >= 4 \
             and has_white_face(cube) >=4 and has_white_cross(cube) >= 4
         case 15:
-            return is_solved(cube) and has_correct_corner_positions(cube) >= 4 \
+            return is_solved(cube)>=4 and has_correct_corner_positions(cube) >= 4 \
             and has_full_white_cross(cube) >= 4 and has_yellow_cross(cube) >= 4 and has_second_layer(cube) >= 4 \
             and has_white_face(cube) >=4 and has_white_cross(cube) >= 4
             
@@ -162,134 +162,20 @@ def solve_with_bfs(cube, available_moves, goal_state):
     return None
 
 
-
-
-# # Run BFS to solve one white edge
-# solution_moves_1 = solve_with_bfs(cube,available_moves_1,0)
-
-# # Output the solution moves if found
-# if solution_moves_1:
-#     print("Solution moves:", solution_moves_1)
-#     print("Total moves:", len(solution_moves_1))
-# else:
-#     print("No moves needed (initial state)")  # This line is unlikely to be reached
-
-# solution_moves_2 = solve_with_bfs(cube,available_moves_1,1)
-
-# # Output the solution moves if found
-# if solution_moves_2:
-#     print("Solution moves:", solution_moves_2)
-#     print("Total moves:", len(solution_moves_2))
-# else:
-#     print("No moves needed (initial state)") # This line is unlikely to be reached
-
-# solution_moves_3 = solve_with_bfs(cube,available_moves_1,2)
-
-# # Output the solution moves if found
-# if solution_moves_3:
-#     print("Solution moves:", solution_moves_3)
-#     print("Total moves:", len(solution_moves_3))
-# else:
-#     print("No moves needed (initial state)")
-
-
-
-# solution_moves_4 = solve_with_bfs(cube,available_moves_1,3)
-
-# # Output the solution moves if found
-# if solution_moves_4:
-#     print("Solution moves:", solution_moves_4)
-#     print("Total moves:", len(solution_moves_4))
-# else:
-#     print("No moves needed (initial state)")
-
-
-
 available_moves_2 = [0,1,2,3,4,5,6,7,8,9,10,11,
                      (4,8,5),(0,8,1),(2,8,3),(6,8,7),
                      (1,8,8,0,8,1,9,0),(3,8,8,2,8,3,9,2),(5,8,8,4,8,5,9,4),(7,8,8,6,8,7,9,6),
                      (1,9,0,8),(3,9,2,8),(5,9,4,8),(7,9,6,8)]
 
-# solution_moves_5 = solve_with_bfs(cube,available_moves_2,4)
-
-# # Output the solution moves if found
-# if solution_moves_5:
-#     print("Solution moves:", solution_moves_5)
-#     print("Total moves:", len(solution_moves_5))
-# else:
-#     print("No moves needed (initial state)")
-
-# solution_moves_6 = solve_with_bfs(cube,available_moves_2,5)
-
-# # Output the solution moves if found
-# if solution_moves_6:
-#     print("Solution moves:", solution_moves_6)
-#     print("Total moves:", len(solution_moves_6))
-# else:
-#     print("No moves needed (initial state)")
-
-# solution_moves_7 = solve_with_bfs(cube,available_moves_2,6)
-
-# # Output the solution moves if found
-# if solution_moves_7:
-#     print("Solution moves:", solution_moves_7)
-#     print("Total moves:", len(solution_moves_7))
-# else:
-#     print("No moves needed (initial state)")
-
-# solution_moves_8 = solve_with_bfs(cube,available_moves_2,7)
-
-# # Output the solution moves if found
-# if solution_moves_8:
-#     print("Solution moves:", solution_moves_8)
-#     print("Total moves:", len(solution_moves_8))
-# else:
-#     print("No moves needed (initial state)")
-
-
 available_moves_3 = [(9,1,8,0,8,4,9,5),(9,7,8,6,8,0,9,1),(9,7,8,6,8,2,9,3),(9,5,8,4,8,3,9,2),
 (8,2,9,3,9,5,8,4),(8,6,9,7,9,3,8,2),(8,0,9,1,9,7,8,6),(8,4,9,5,9,1,8,0),(8,8)]
 
-# solution_moves_9 = solve_with_bfs(cube,available_moves_3,8)
-
-# # Output the solution moves if found
-# if solution_moves_9:
-#     print("Solution moves:", solution_moves_9)
-#     print("Total moves:", len(solution_moves_9))
-# else:
-#     print("No moves needed (initial state)")
-
-# solution_moves_10 = solve_with_bfs(cube,available_moves_3,9)
-
-# # Output the solution moves if found
-# if solution_moves_10:
-#     print("Solution moves:", solution_moves_10)
-#     print("Total moves:", len(solution_moves_10))
-# else:
-#     print("No moves needed (initial state)")
-
-# solution_moves_11 = solve_with_bfs(cube,available_moves_3,10)
-
-# # Output the solution moves if found
-# if solution_moves_11:
-#     print("Solution moves:", solution_moves_11)
-#     print("Total moves:", len(solution_moves_11))
-# else:
-#     print("No moves needed (initial state)")
-
-# solution_moves_12 = solve_with_bfs(cube,available_moves_3,11)
-
-# # Output the solution moves if found
-# if solution_moves_12:
-#     print("Solution moves:", solution_moves_12)
-#     print("Total moves:", len(solution_moves_12))
-# else:
-#     print("No moves needed (initial state)")
-
 available_moves_4 = [(4,2,8,3,9,5),8,9]
-available_moves_5 = [(2,8,3,8,2,8,8,3,8),(2,8,3,8,2,8,8,3)] # to adjust
-available_moves_6 = [(8,2,9,1,8,3,9,0)]
-available_moves_7 = [(3,11,2,10),8,9]
+available_moves_5 = [(2,8,3,8,2,8,8,3,8),(2,8,3,8,2,8,8,3),(0,8,1,8,0,8,8,1,8),(0,8,1,8,0,8,8,1),\
+                     (4,8,5,8,4,8,8,5,8),(4,8,5,8,4,8,8,5),(6,8,7,8,6,8,8,7,8),(6,8,7,8,6,8,8,7)] # to adjust 
+available_moves_6 = [(8,2,9,1,8,3,9,0),(8,0,9,3,8,1,9,2),(8,4,9,7,8,5,9,6),(8,6,9,5,8,7,9,4)]
+# available_moves_7 = [(3,11,2,10),(1,11,0,10),(5,11,4,10),(7,11,6,10),8,9]
+available_moves_7 = [(1,11,0,10),9,10]
 
 for goal_state in range(16):
 
