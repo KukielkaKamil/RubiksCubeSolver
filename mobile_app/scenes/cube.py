@@ -1,21 +1,46 @@
 import flet as ft
 import asyncio
+from RubiksCube import RubiksCube as rb
 
 
 CELL_SIZE = 50
 GRID_SIZE = (CELL_SIZE + 10) * 3
 face_positions = [0,0,0] #0-3 - F,R,B,L Faces; 0-1 U Face 0-1 D Face
 cube_faces = []
+color_elements = []
+color_counts={
+    "green" : 1,
+    "red": 1,
+    "blue": 1,
+    "orange": 1,
+    "white": 1,
+    "yellow": 1
+}
 def get_cube_page(page:ft.Page, switch_scene, go_back):
     current_color = "white"
+    prev_color_element = None
+    selected_color_element = None
     page.appbar = ft.AppBar(
             leading=ft.IconButton(ft.icons.ARROW_BACK,on_click=go_back),
             title=ft.Text("Rubik's Cube Solver")
         )
 
     def change_color(e,color):
-        nonlocal current_color
+        nonlocal current_color,selected_color_element,prev_color_element
         current_color = color
+        if selected_color_element != e.control:
+            prev_color_element = selected_color_element
+            selected_color_element = e.control
+        selected_color_element.border = ft.border.all(2, ft.colors.BLACK) if not None else None
+        if prev_color_element:
+            prev_color_element.border = None
+
+        page.update()
+
+    def update_color_counts():
+        for e in color_elements:
+            e.content.value = color_counts[e.bgcolor]
+        
 
     def color_cell(e, cell):
         if face_positions[1] == 1:
@@ -25,6 +50,13 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
         else:
             current_face = face_positions[0]
         
+        facet_color = cube_faces[current_face][cell].bgcolor
+        if facet_color == ft.colors.GREY:
+            color_counts[current_color] += 1
+        elif facet_color != current_color:
+            color_counts[current_color] += 1
+            color_counts[facet_color] -= 1
+        update_color_counts()
         cube_faces[current_face][cell].bgcolor = current_color
         page.update()
 
@@ -57,11 +89,10 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
             # Animate the transition for the new position
             for cell in cube_faces[prev_grid]:
                 cell.animate_offset = ft.animation.Animation(300)
-            page.update()
 
-            # Update the face position
             face_positions[0] = next_grid
-
+            update_move_buttons(0)
+            page.update()
 
     async def prev_face(e):
         if face_positions[1] != 1 and face_positions[2] != 1:
@@ -92,10 +123,11 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
             # Animate the transition for the new position
             for cell in cube_faces[next_grid]:
                 cell.animate_offset = ft.animation.Animation(300)
-            page.update()
-
+            
             # Update the face position
             face_positions[0] = prev_grid
+            update_move_buttons(0)
+            page.update()
 
 
 
@@ -142,6 +174,9 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
                 cell.offset = ft.transform.Offset(0,3.5)
             page.update()
             face_positions[2] = 0
+            face_positions[0] = 0
+            update_move_buttons(0)
+            page.update()
 
         else:
             current_grid = face_positions[0] % 4
@@ -151,8 +186,9 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
             top_grid = cube_faces[4]
             for cell in top_grid:
                 cell.offset = ft.transform.Offset(0,0)
-            page.update()
             face_positions[1] = 1
+            update_move_buttons(1)
+            page.update()
             await asyncio.sleep(0.3)
             await reset_front_faces()
 
@@ -167,6 +203,9 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
                 cell.offset = ft.transform.Offset(0,-3.5)
             page.update()
             face_positions[1] = 0
+            face_positions[0] = 0
+            update_move_buttons(0)
+            page.update()
         else:
             current_grid = face_positions[0] % 4
             for cell in cube_faces[current_grid]:
@@ -175,10 +214,75 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
             top_grid = cube_faces[5]
             for cell in top_grid:
                 cell.offset = ft.transform.Offset(0,0)
-            page.update()
             face_positions[2] = 1
+            update_move_buttons(2)
+            page.update()
             await asyncio.sleep(0.3)
             await reset_front_faces()
+
+    up_button = ft.IconButton(
+                    ft.icons.KEYBOARD_ARROW_UP,
+                    icon_color = "black",
+                    bgcolor="white",
+                    on_click=up_face
+                )
+    
+    down_button = ft.IconButton(
+                    ft.icons.KEYBOARD_ARROW_DOWN,
+                    icon_color = "black",
+                    bgcolor="yellow",
+                    on_click= down_face,
+                )
+
+    right_button = ft.IconButton(
+                    ft.icons.KEYBOARD_ARROW_RIGHT,
+                    icon_color = "black",
+                    bgcolor="red",
+                    on_click=next_face,
+                    
+                )
+    
+    left_button = ft.IconButton(
+                    ft.icons.KEYBOARD_ARROW_LEFT,
+                    icon_color = "black",
+                    bgcolor="orange",
+                    on_click = prev_face,
+                    
+                )
+    
+    def update_move_buttons(state):
+
+
+        match face_positions[0]:
+            case 0:
+                up_button.bgcolor = ft.colors.WHITE
+                up_button.visible = True
+                right_button.bgcolor = ft.colors.RED
+                right_button.visible = True
+                left_button.bgcolor = ft.colors.ORANGE
+                left_button.visible = True
+                down_button.bgcolor = ft.colors.YELLOW
+                down_button.visible = True
+            case 1:
+                right_button.bgcolor = ft.colors.BLUE
+                left_button.bgcolor = ft.colors.GREEN
+            case 2:
+                right_button.bgcolor = ft.colors.ORANGE
+                left_button.bgcolor = ft.colors.RED
+            case 3:
+                right_button.bgcolor = ft.colors.GREEN
+                left_button.bgcolor = ft.colors.BLUE
+        if state == 1:
+            up_button.visible = False
+            right_button.visible = False
+            left_button.visible = False
+            down_button.bgcolor = ft.colors.GREEN
+        elif state == 2:
+            up_button.bgcolor = ft.colors.GREEN
+            right_button.visible = False
+            left_button.visible = False
+            down_button.visible = False
+
 
 
     def create_grid(bgcolor,offset_x, offset_y):
@@ -187,16 +291,38 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
         for row in range(3):
             row_controls = []
             for col in range(3):
-                cell = ft.Container(
-                    bgcolor=bgcolor,
-                    width=CELL_SIZE,
-                    height=CELL_SIZE,
-                    border_radius=5,
-                    alignment=ft.alignment.center,
-                    offset=ft.transform.Offset(offset_x, offset_y),  # Initially off-screen
-                    animate_offset=ft.animation.Animation(300),
-                    on_click= lambda e, cell= row*3 + col: color_cell(e, cell),
-                )
+                if bgcolor == ft.colors.TRANSPARENT and not (col == 1 and row == 1):
+                    cell = ft.Container(
+                        bgcolor=bgcolor,
+                        width=CELL_SIZE,
+                        height=CELL_SIZE,
+                        border_radius=5,
+                        alignment=ft.alignment.center,
+                        offset=ft.transform.Offset(offset_x, offset_y),  # Initially off-screen
+                        animate_offset=ft.animation.Animation(300),
+                        on_click= lambda e, cell= row*3 + col: color_cell(e, cell),
+                    )
+                elif row == 1 and col == 1:
+                    cell = ft.Container(
+                        bgcolor=bgcolor,
+                        width=CELL_SIZE,
+                        height=CELL_SIZE,
+                        border_radius=5,
+                        alignment=ft.alignment.center,
+                        offset=ft.transform.Offset(offset_x, offset_y),  # Initially off-screen
+                        animate_offset=ft.animation.Animation(300),
+                    )
+                else:
+                    cell = ft.Container(
+                        bgcolor=ft.colors.GREY,
+                        width=CELL_SIZE,
+                        height=CELL_SIZE,
+                        border_radius=5,
+                        alignment=ft.alignment.center,
+                        offset=ft.transform.Offset(offset_x, offset_y),  # Initially off-screen
+                        animate_offset=ft.animation.Animation(300),
+                    )
+
                 row_controls.append(cell)
                 grid_cells.append(cell)
             grid_rows.append(ft.Row(controls=row_controls, alignment=ft.MainAxisAlignment.CENTER))
@@ -251,6 +377,31 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
                     width=GRID_SIZE,
                     height=GRID_SIZE,
                 )
+    
+    for color in color_counts.keys():
+        element = ft.Container(
+                    content=ft.Text("1",color="black"),
+                    bgcolor=color,
+                    width = 50,
+                    height=50,
+                    padding=5,
+                    border_radius=ft.border_radius.all(100),
+                    col=1,
+                    alignment=ft.alignment.center,
+                    on_click=lambda e, color = color: change_color(e,color)
+                )
+        color_elements.append(element)
+    
+    def validate_cube():
+        if not all(c == 9 for c in color_counts):
+            return False
+        
+        
+        validator_cube = rb()
+        validator_cube.cube = cube_to_list()
+        return False
+
+
     content = ft.Column([
         ft.Row(
             [
@@ -260,123 +411,47 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
         ),
         ft.Row(
             [
-                ft.IconButton(
-                    ft.icons.KEYBOARD_ARROW_UP,
-                    icon_color = "black",
-                    bgcolor="white",
-                    on_click=up_face
-                ),
+                up_button
             ],
             ft.MainAxisAlignment.CENTER
         ),
         ft.Row(
             [
-                ft.IconButton(
-                    ft.icons.KEYBOARD_ARROW_LEFT,
-                    icon_color = "black",
-                    bgcolor="orange",
-                    on_click = prev_face,
-                    
-                ),
+                left_button,
                 cube_container,
-                ft.IconButton(
-                    ft.icons.KEYBOARD_ARROW_RIGHT,
-                    icon_color = "black",
-                    bgcolor="red",
-                    on_click=next_face,
-                    
-                ),
+                right_button
             ],
             alignment=ft.MainAxisAlignment.CENTER
         ),
         ft.Row(
             [
-                ft.IconButton(
-                    ft.icons.KEYBOARD_ARROW_DOWN,
-                    icon_color = "black",
-                    bgcolor="yellow",
-                    on_click= down_face,
-                ),
+                down_button
             ],
             ft.MainAxisAlignment.CENTER
         ),
         ft.Row(
             [
-                ft.Container(
-                    content=ft.Text("0"),
-                    bgcolor="red",
-                    width = 50,
-                    height=50,
-                    padding=5,
-                    border_radius=ft.border_radius.all(100),
-                    col=1,
-                    alignment=ft.alignment.center,
-                    on_click=lambda e: change_color(e,"red")
-                ),
-                ft.Container(
-                    content=ft.Text("0"),
-                    bgcolor="Blue",
-                    width = 50,
-                    height=50,
-                    padding=5,
-                    border_radius=ft.border_radius.all(100),
-                    col=1,
-                    alignment=ft.alignment.center,
-                    on_click=lambda e: change_color(e,"blue",)
-                ),
-                ft.Container(
-                    content=ft.Text("0"),
-                    bgcolor="Yellow",
-                    width = 50,
-                    height=50,
-                    padding=5,
-                    border_radius=ft.border_radius.all(100),
-                    col=1,
-                    alignment=ft.alignment.center,
-                    on_click= lambda e: change_color(e,"yellow")
-                ),
+                color_elements[0],
+                color_elements[1],
+                color_elements[2],
             ],
             alignment=ft.MainAxisAlignment.CENTER
         ),
         ft.Row(
             [
-                ft.Container(
-                    content=ft.Text("0"),
-                    bgcolor="white",
-                    width = 50,
-                    height=50,
-                    padding=5,
-                    border_radius=ft.border_radius.all(100),
-                    col=1,
-                    alignment=ft.alignment.center,
-                    on_click=lambda e: change_color(e,"white")
-                ),
-                ft.Container(
-                    content=ft.Text("0"),
-                    bgcolor="orange",
-                    width = 50,
-                    height=50,
-                    padding=5,
-                    border_radius=ft.border_radius.all(100),
-                    col=1,
-                    alignment=ft.alignment.center,
-                    on_click=lambda e: change_color(e,"orange")
-                ),
-                ft.Container(
-                    content=ft.Text("0"),
-                    bgcolor="green",
-                    width = 50,
-                    height=50,
-                    padding=5,
-                    border_radius=ft.border_radius.all(100),
-                    col=1,
-                    alignment=ft.alignment.center,
-                    on_click=lambda e: change_color(e,"green")
-                ),
+                color_elements[3],
+                color_elements[4],
+                color_elements[5],
             ],
             alignment=ft.MainAxisAlignment.CENTER
         ),
-        ft.FilledButton("Dalej",on_click = lambda e: switch_scene(e, "algorithm"))
+        ft.Row(
+            [
+                ft.FilledButton("Użyj aparatu",on_click = None),
+                ft.FilledButton("Dalej",on_click = lambda e: switch_scene(e, "algorithm"))
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+        )
     ])
         
 
@@ -397,6 +472,8 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
 
 
     return content
+
+
 
 def color_to_letter(color):
     match color:
