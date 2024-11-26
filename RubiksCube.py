@@ -382,3 +382,12 @@ class RubiksCube:
         return [self._color_to_int[facelet] for facelet in self.cube]
 
 
+    def decode_state_num(self,state):
+        int_to_color = {v: k for k, v in self._color_to_int.items()}
+        cube_list = [int_to_color[i] for i in state]
+        self.cube = cube_list
+        return self
+    
+    def decode_state_lett(self,state):
+        cube_list = [self._letter_to_color[l] for l in state]
+        self.cube = cube_list

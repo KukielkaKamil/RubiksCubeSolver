@@ -5,19 +5,25 @@ import threading
 from scenes.cube import cube_to_list
 from helperFunctions.RubiksCube import RubiksCube as rb
 from scenes.cube import CELL_SIZE, GRID_SIZE
-import random
+from copy import deepcopy
 import math
 
 
 initial_content = ft.Column()
 player_cells=[]
+move_sequence = []
+move_index = 0
+current_page = None
+is_playing = False
 
 player_cube = rb()
+intial_cube = deepcopy(player_cube)
 
 URL = 'http://127.0.0.1:5000/kociemba'
 
 def get_results_page(page:ft.Page, switch_scene, go_back):
-    
+    global current_page
+    current_page = page
     initial_content.controls.append(ft.ProgressRing(width=32,height=32,stroke_width=2))
 
     # asyncio.run(test())
@@ -66,11 +72,48 @@ def create_player():
     player_cells.append(bg_cells)
     # player_cells.append(vstrp_cels)
     # player_cells.append(hstrp_cels)
-    return ft.Container(grid_stack, width=GRID_SIZE, height=GRID_SIZE)
+    player_content = ft.Container(grid_stack, width=GRID_SIZE, height=GRID_SIZE)
+
+    controler_buttons = ft.Row(
+            [
+                ft.IconButton(
+                    icon=ft.icons.KEYBOARD_DOUBLE_ARROW_RIGHT,
+                    icon_color="blue400",
+                    icon_size=20,
+                    tooltip="Next move",
+                    on_click= lambda e, page=current_page: asyncio.run(next_move(e,page))
+                ),
+                ft.IconButton(
+                    icon=ft.icons.KEYBOARD_DOUBLE_ARROW_LEFT,
+                    icon_color="pink600",
+                    icon_size=40,
+                    tooltip="Prev move",
+                    on_click= lambda e, page=current_page: asyncio.run(prev_move(e,page))
+                ),ft.IconButton(
+                    icon=ft.icons.PLAY_ARROW,
+                    icon_color="blue400",
+                    icon_size=20,
+                    tooltip="Play",
+                    on_click= lambda e, page=current_page: asyncio.run(play_sequence(e,page))
+                ),
+                ft.IconButton(
+                    icon=ft.icons.PAUSE,
+                    icon_color="pink600",
+                    icon_size=40,
+                    tooltip="Pause",
+                    on_click= pause_player
+                ),
+            ]
+        )
+    return ft.Column([
+        player_content,
+        controler_buttons
+    ])
 
 
 
 async def send_request(page):
+    global move_sequence
     cube = cube_to_list()
     params={'cubestring':cube}
 
@@ -79,6 +122,7 @@ async def send_request(page):
 
     if response.status_code == 200:
         result_text = response.json().get('result', 'No result found')
+        move_sequence = result_text
         player_cube.decode_state_lett(cube_to_list())
         text = ft.Text(result_text)
         player = create_player()
@@ -94,16 +138,57 @@ async def send_request(page):
 
         # for move in moves_to_do:
         #     await play_move(page,move)
-        await player_U(page)
-        await player_D(page)
-        await player_F(page)
-        await player_R(page)
-        await player_B(page)
+        # await player_U(page)
+        # await player_D(page)
+        # await player_F(page)
+        # await player_R(page)
+        # await player_B(page)
 
 
         
         page.update()
 
+
+async def next_move(e,page):
+    global move_index, move_sequence
+    if move_index < len(move_sequence):
+        await play_move(page,move_sequence[move_index])
+        move_index += 1
+
+async def prev_move(e,page):
+    global move_index,move_sequence
+    # print("doing this")
+    # print (move_index)
+    if move_index > 0:
+        prev_move = move_sequence[move_index]
+        if prev_move.startswith("`") and len(prev_move) == 2:
+            inv_move = prev_move[1]  # Return the character without the backtick
+        else:
+            inv_move = prev_move+"`"  # Add a backtick to the character
+        await play_move(page,inv_move)
+        move_index -= 1
+
+async def play_sequence(e,page):
+    global is_playing,move_sequence
+    is_playing = True
+    for m in range(len(move_sequence)):
+        if is_playing:
+            await next_move(e,page)
+            await asyncio.sleep(0.5)
+    is_playing= False
+
+def pause_player(e):
+    global is_playing
+    is_playing = False
+
+def reset_player(e,page):
+    global is_playing,move_index, initial_cube
+    is_playing=False
+    move_index=0
+
+    for i in range(9):
+        change_color(player_cells[0][i],player_cube.cube[i])
+    
 
 def create_grid(height=3,width=3,offset_x=0,offset_y=0):
         grid_cells = []
@@ -311,7 +396,6 @@ async def player_B_prime(page):
     page.update()
     player_cube.B()
 
-    
 
 async def play_move(page,move):
     match move:

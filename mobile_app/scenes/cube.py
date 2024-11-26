@@ -1,6 +1,6 @@
 import flet as ft
 import asyncio
-from RubiksCube import RubiksCube as rb
+from helperFunctions.RubiksCube import RubiksCube as rb
 
 
 CELL_SIZE = 50
