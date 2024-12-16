@@ -1,128 +1,124 @@
 import cv2
 import numpy as np
 import flet as ft
+import base64
+import asyncio
 
-# Function to detect colors on a Rubik's Cube face
-def detect_colors(image):
+# Define the function to detect color in a square
+def detect_color(square):
+    hsv = cv2.cvtColor(square, cv2.COLOR_BGR2HSV)
+
     color_ranges = {
-        "red": [(0, 100, 100), (10, 255, 255)],        # Adjusted for better red detection
-        "green": [(40, 50, 50), (90, 255, 255)],       # Adjusted for better green detection
-        "blue": [(90, 50, 50), (130, 255, 255)],      # Blue range is fine for most lighting
-        "yellow": [(15, 150, 150), (40, 255, 255)],    # Adjusted for more yellow detection
-        "orange": [(5, 150, 150), (20, 255, 255)],    # Slight adjustment for orange
-        "white": [(0, 0, 150), (180, 40, 255)],       # Adjusted for white detection
+        "White": ((0, 0, 150), (180, 100, 255)),
+        "Yellow": ((20, 100, 100), (30, 255, 255)),
+        "Red": ((0, 100, 100), (10, 255, 255)),
+        "Green": ((35, 50, 50), (85, 255, 255)),
+        "Blue": ((90, 50, 50), (130, 255, 255)),
+        "Orange": ((5, 100, 100), (15, 255, 255))
     }
 
-    def get_color(hsv_pixel):
-        hsv_pixel = hsv_pixel.astype("uint8")
-        print(f"HSV Pixel: {hsv_pixel}")
-        for color, (lower, upper) in color_ranges.items():
-            lower = np.array(lower, dtype="uint8")
-            upper = np.array(upper, dtype="uint8")
-            if cv2.inRange(hsv_pixel.reshape(1, 1, 3), lower, upper):
-                return color
-        return "unknown"
+    for color, (lower, upper) in color_ranges.items():
+        lower_bound = np.array(lower)
+        upper_bound = np.array(upper)
+        mask = cv2.inRange(hsv, lower_bound, upper_bound)
+        
+        if np.sum(mask) > 0:
+            return color
+
+    return "Unknown"
 
 
+# Function to capture the camera feed and return it as an image
+def get_camera_frame(cap):
+    ret, img = cap.read()
+    if not ret:
+        print("Failed to grab frame")
+        return None
 
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    height, width, _ = image.shape
-    grid_size = min(height, width) // 3
-    face_colors = []
+    img = cv2.resize(img, (600, 600))  # Resize for better performance
+    
+    # Process image (overlay grid and colors)
+    detected_colors = []
+    height, width, _ = img.shape
+    square_size = 30
+    spacing = 50
+    total_grid_width = 3 * square_size + 2 * spacing
+    total_grid_height = 3 * square_size + 2 * spacing
+    x_offset = (width - total_grid_width) // 2
+    y_offset = (height - total_grid_height) // 2
 
     for row in range(3):
-        row_colors = []
         for col in range(3):
-            x_start, y_start = col * grid_size, row * grid_size
-            x_end, y_end = x_start + grid_size, y_start + grid_size
-            region = hsv[y_start:y_end, x_start:x_end]
-            avg_color = np.mean(region, axis=(0, 1)).astype("uint8")
-            row_colors.append(get_color(avg_color))
+            x1 = x_offset + col * (square_size + spacing)
+            y1 = y_offset + row * (square_size + spacing)
+            x2 = x1 + square_size
+            y2 = y1 + square_size
+            square = img[y1:y2, x1:x2]
+            color = detect_color(square)
+            detected_colors.append(color)
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(img, color, (x1 + 5, y1 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
-            # Debugging: Draw the grid and print HSV value
-            cv2.rectangle(image, (x_start, y_start), (x_end, y_end), (0, 255, 0), 2)
+    return img, detected_colors
 
-        face_colors.append(row_colors)
 
-    print("Detected colors:", face_colors)
-    return face_colors
+# Function to convert an image to base64 string
+def image_to_base64(img):
+    _, buffer = cv2.imencode('.png', img)
+    base64_data = base64.b64encode(buffer).decode('utf-8')
+    return base64_data
 
-# Flet UI for the Rubik's Cube Scanner
-def main(page: ft.Page):
-    def scan_face(e):
-        cap = cv2.VideoCapture(0)
-        
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                page.snack_bar = ft.SnackBar(ft.Text("Error: Unable to access camera"))
-                page.snack_bar.open = True
-                page.update()
-                break
 
-            frame_resized = cv2.resize(frame, (300, 300))
-            detected_colors = detect_colors(frame_resized)
-
-            # Show grid visualization for debugging (real-time)
-            cv2.imshow("Rubik's Cube Real-Time", frame)
-
-            # Update UI with detected colors (real-time)
-            update_cube_ui(detected_colors)
-
-            # Exit condition for real-time video feed (press 'q' to quit)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-        cap.release()
-        cv2.destroyAllWindows()
-
-    def update_cube_ui(colors):
-        cube_grid.controls.clear()
-        color_map = {
-            "red": ft.Colors.RED,
-            "green": ft.Colors.GREEN,
-            "blue": ft.Colors.BLUE,
-            "yellow": ft.Colors.YELLOW,
-            "orange": ft.Colors.ORANGE,
-            "white": ft.Colors.WHITE,
-            "unknown": ft.Colors.GREY,
-        }
-        
-        for row in colors:
-            row_widgets = []
-            for color in row:
-                cell = ft.Container(
-                    width=50,
-                    height=50,
-                    bgcolor=color_map.get(color, ft.Colors.GREY),
-                    border_radius=5,
-                )
-                row_widgets.append(cell)
-            cube_grid.controls.append(ft.Row(row_widgets, spacing=5))
-        page.update()
-
-    page.title = "Rubik's Cube Real-Time Scanner"
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+# Flet app logic
+async def main(page: ft.Page):
+    page.title = "Live Camera View with Color Detection"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    # Cube grid container
-    cube_grid = ft.Column(spacing=5)
+    # Array to store colors
+    saved_colors = []
 
-    # Button to start the scan
-    scan_button = ft.ElevatedButton("Start Scanning", on_click=scan_face)
+    # Image widget to display the camera feed
+    camera_image = ft.Image(width=600, height=600)
 
-    # Layout
-    page.add(
-        ft.Column(
-            [
-                ft.Text("Rubik's Cube Real-Time Scanner", size=30, weight="bold"),
-                scan_button,
-                cube_grid,
-            ],
-            spacing=20,
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        )
-    )
+    # Button to save colors
+    save_button = ft.ElevatedButton("Scan Face", on_click=lambda e: save_colors(e, saved_colors))
 
+    # Open the camera once at the start
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Error: Could not open camera.")
+        return
+
+    # Function to update the live camera feed and process frames
+    async def update_camera():
+        while True:
+            img, detected_colors = get_camera_frame(cap)
+
+            if img is not None:
+                # Convert the image to base64 and set it to the Image widget
+                base64_img = image_to_base64(img)
+                camera_image.src_base64 = base64_img  # Set the base64-encoded image
+
+                # Store the colors when button is pressed
+                save_button.on_click = lambda e: save_colors(e, detected_colors)
+
+                page.update()
+
+            # Sleep for 100ms before refreshing the image
+            await asyncio.sleep(0.1)
+
+    # Start the camera feed update loop in the background
+    asyncio.create_task(update_camera())
+
+    def save_colors(event, detected_colors):
+        # Store the detected colors
+        saved_colors.clear()
+        saved_colors.extend(detected_colors)
+        print("Saved colors:", saved_colors)
+
+    # Add widgets to the page
+    page.add(camera_image, save_button)
+
+
+# Run the app
 ft.app(target=main)
