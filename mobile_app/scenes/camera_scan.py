@@ -29,7 +29,7 @@ def detect_color(square):
 
 
 # Function to capture the camera feed and return it as an image
-def get_camera_frame(cap):
+def get_camera_frame(cap, center_color=(0, 0, 255)):
     ret, img = cap.read()
     if not ret:
         print("Failed to grab frame")
@@ -53,11 +53,16 @@ def get_camera_frame(cap):
             y1 = y_offset + row * (square_size + spacing)
             x2 = x1 + square_size
             y2 = y1 + square_size
-            square = img[y1:y2, x1:x2]
-            color = detect_color(square)
-            detected_colors.append(color)
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(img, color, (x1 + 5, y1 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+            # If it's the center block, skip color detection and fill with the specified color
+            if row == 1 and col == 1:
+                cv2.rectangle(img, (x1, y1), (x2, y2), center_color, -1)  # Filled rectangle
+            else:
+                square = img[y1:y2, x1:x2]
+                color = detect_color(square)
+                detected_colors.append(color)
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(img, color, (x1 + 5, y1 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
     return img, detected_colors
 
@@ -74,8 +79,11 @@ async def main(page: ft.Page):
     page.title = "Live Camera View with Color Detection"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    # Array to store colors
+    # Array to store colors of a face
     saved_colors = []
+
+    # Storing cube as a string
+    cube_colors = ""
 
     # Image widget to display the camera feed
     camera_image = ft.Image(width=600, height=600)
@@ -83,16 +91,23 @@ async def main(page: ft.Page):
     # Button to save colors
     save_button = ft.ElevatedButton("Scan Face", on_click=lambda e: save_colors(e, saved_colors))
 
+    next_face_button = ft.ElevatedButton("Next Face")
+
     # Open the camera once at the start
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open camera.")
         return
 
+    # Center block color (initially red)
+    center_colors = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 165, 0), (255, 255, 255)]  # Red, Green, Blue, Yellow, Orange, White
+    center_colors_symbols = ['R','G','B','Y','O','W']
+    current_color_index = 0  # Start with the first color
+
     # Function to update the live camera feed and process frames
     async def update_camera():
         while True:
-            img, detected_colors = get_camera_frame(cap)
+            img, detected_colors = get_camera_frame(cap, center_color=center_colors[current_color_index])
 
             if img is not None:
                 # Convert the image to base64 and set it to the Image widget
@@ -109,15 +124,26 @@ async def main(page: ft.Page):
 
     # Start the camera feed update loop in the background
     asyncio.create_task(update_camera())
-
+    
     def save_colors(event, detected_colors):
         # Store the detected colors
         saved_colors.clear()
         saved_colors.extend(detected_colors)
         print("Saved colors:", saved_colors)
 
+    # Change the center block color when the "Next Face" button is clicked
+    def change_center_color(event):
+        nonlocal current_color_index,cube_colors
+        saved_colors_symbols = [color[0] for color in saved_colors]
+        current_face = saved_colors_symbols[:4] + [center_colors_symbols[current_color_index]] + saved_colors_symbols[4:]
+        cube_colors += "".join(current_face)
+        current_color_index = (current_color_index + 1) % len(center_colors) # Cycle through colors
+        print(cube_colors)
+
+    next_face_button.on_click = change_center_color
+
     # Add widgets to the page
-    page.add(camera_image, save_button)
+    page.add(camera_image, ft.Row([save_button, next_face_button]))
 
 
 # Run the app
