@@ -5,6 +5,7 @@ from scenes.settings import get_page
 from scenes.cube import get_cube_page
 from scenes.algorithm_selection import get_algorithm_page
 from scenes.results import get_results_page
+from scenes.camera_scan import get_scan_page
 
 
 
@@ -12,7 +13,7 @@ from scenes.results import get_results_page
 def main(page: ft.Page):
     scene_stack = []
 
-    def switch_scene(e, scene_name):
+    def switch_scene(e, scene_name,option =""):
         # Push current scene to stack before switching
         if scene_stack:
             current_scene = scene_stack[-1]
@@ -21,7 +22,7 @@ def main(page: ft.Page):
         else:
             scene_stack.append(scene_name)
 
-        load_scene(scene_name)
+        load_scene(scene_name,option)
 
     # Function to go back to the previous scene
     def go_back(e):
@@ -33,7 +34,7 @@ def main(page: ft.Page):
             print("No previous scene")
         
 
-    def load_scene(scene_name):
+    def load_scene(scene_name,option=""):
         page.controls.clear()  # Clear the current scene
         if scene_name == "main_scene":
             page.appbar=None
@@ -41,11 +42,13 @@ def main(page: ft.Page):
         if scene_name == "settings":
             page.add(get_page(page, switch_scene, go_back))  # Load Scene 1
         if scene_name == 'cube':
-            page.add(get_cube_page(page, switch_scene, go_back))
+            page.add(get_cube_page(page, switch_scene, go_back,option))
         if scene_name == 'algorithm':
             page.add(get_algorithm_page(page,switch_scene,go_back))
         if scene_name == 'results':
             page.add(get_results_page(page,switch_scene,go_back))
+        if scene_name == 'scan':
+            page.add(get_scan_page(page,switch_scene,go_back))
         page.update()
 
     page.theme_mode = ft.ThemeMode.DARK
