@@ -16,7 +16,8 @@ color_counts={
     "white": 1,
     "yellow": 1
 }
-def get_cube_page(page:ft.Page, switch_scene, go_back):
+#Loading th scene
+def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
     current_color = "white"
     prev_color_element = None
     selected_color_element = None
@@ -25,6 +26,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
             title=ft.Text("Rubik's Cube Solver")
         )
 
+    #Changes the current color that is used for painting
     def change_color(e,color):
         nonlocal current_color,selected_color_element,prev_color_element
         current_color = color
@@ -37,11 +39,12 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
 
         page.update()
 
+    # Updates the count of a color buttons
     def update_color_counts():
         for e in color_elements:
             e.content.value = color_counts[e.bgcolor]
         
-
+    #Changes colors of a cell
     def color_cell(e, cell):
         if face_positions[1] == 1:
             current_face = 4
@@ -349,7 +352,27 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             rotate=ft.Rotate(0,ft.alignment.center)
         )
-        
+    
+    def load_from_string(string):
+        color_map = {
+            "W" : (ft.Colors.WHITE,'white'),
+            "G": (ft.Colors.GREEN,'green'),
+            "R": (ft.Colors.RED,'red'),
+            "B": (ft.Colors.BLUE,'blue'),
+            "O": (ft.Colors.ORANGE,'orange'),
+            "Y": (ft.Colors.YELLOW,'yellow'),
+            "U": (ft.Colors.GREY,'grey')
+        }
+        for key in color_counts:
+            color_counts[key] = 0
+        for i,c  in enumerate(string):
+            face = i//9
+            facelet = i % 9
+            cube_faces[face][facelet].bgcolor = color_map[c][0]
+            if color_map[c][1] != 'grey':
+                color_counts[color_map[c][1]] += 1
+        update_color_counts()
+
     if len(cube_faces) == 0:
         grid_1 = create_grid("green",0,0)
         grid_2 = create_grid("red",3.5,0)
@@ -366,6 +389,9 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
         grid_5 = recreate_grid(4)
         grid_6 = recreate_grid(5)
         control_grid = recreate_grid(6)
+
+    if len(cube_string) != 0:
+        load_from_string(cube_string)
     # Wrap both grids in a Stack to overlay them
     grid_stack = ft.Stack(
         controls=[grid_1, grid_2,grid_3,grid_4,grid_5,grid_6,control_grid],
@@ -447,7 +473,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back):
         ),
         ft.Row(
             [
-                ft.FilledButton("Użyj aparatu",on_click = None),
+                ft.FilledButton("Użyj aparatu",on_click = lambda e: switch_scene(e, "scan")),
                 ft.FilledButton("Dalej",on_click = lambda e: switch_scene(e, "algorithm"))
             ],
             alignment=ft.MainAxisAlignment.CENTER,
