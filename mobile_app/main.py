@@ -46,7 +46,7 @@ def main(page: ft.Page):
         if scene_name == 'algorithm':
             page.add(get_algorithm_page(page,switch_scene,go_back))
         if scene_name == 'results':
-            page.add(get_results_page(page,switch_scene,go_back))
+            page.add(get_results_page(page,switch_scene,go_back,option))
         if scene_name == 'scan':
             page.add(get_scan_page(page,switch_scene,go_back))
         page.update()

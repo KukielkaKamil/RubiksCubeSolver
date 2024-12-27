@@ -1,6 +1,7 @@
 import flet as ft
 import asyncio
 from helperFunctions.RubiksCube import RubiksCube as rb
+import random
 
 
 CELL_SIZE = 50
@@ -426,6 +427,16 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
         validator_cube = rb()
         validator_cube.cube = cube_to_list()
         return False
+    
+
+    def scramble_cube(e):
+        scrambled_cube = rb()
+        random_moves = random.randint(10,30)
+        scrambled_cube.scramble(random_moves)
+        cube_string = scrambled_cube.encode_to_cubestring()
+        load_from_string(cube_string)
+        page.update()
+        print(cube_string)
 
 
     content = ft.Column([
@@ -474,7 +485,8 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
         ft.Row(
             [
                 ft.FilledButton("Użyj aparatu",on_click = lambda e: switch_scene(e, "scan")),
-                ft.FilledButton("Dalej",on_click = lambda e: switch_scene(e, "algorithm"))
+                ft.FilledButton("Dalej",on_click = lambda e: switch_scene(e, "algorithm")),
+                ft.FilledButton("Polosuj",on_click = scramble_cube)
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         )

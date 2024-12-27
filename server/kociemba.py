@@ -11,6 +11,7 @@ def solve(cubestring):
 
 
 def moves_to_list(moves):
+    print(moves)
     moves = re.sub(r"\(.*?\)", "", moves).strip()
     moves = moves.split()
 

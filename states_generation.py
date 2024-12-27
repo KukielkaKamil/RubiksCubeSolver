@@ -5,8 +5,8 @@ from queue import Queue
 from copy import deepcopy
 import random
 
-MAX_DEPTH = 12
-NUM_THREADS = 4  # Adjust based on available cores
+MAX_DEPTH = 20
+NUM_THREADS = 10  # Adjust based on available cores
 DB_PATH = 'cube_states.db'
 MOVES = list(range(12))  # 12 moves available
 

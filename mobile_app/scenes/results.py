@@ -19,11 +19,13 @@ is_playing = False
 player_cube = rb()
 intial_cube = deepcopy(player_cube)
 
-URL = 'http://127.0.0.1:5000/kociemba'
+URL = 'http://127.0.0.1:5000'
 
-def get_results_page(page:ft.Page, switch_scene, go_back):
-    global current_page
+def get_results_page(page:ft.Page, switch_scene, go_back,endpoint):
+    global current_page, URL
     current_page = page
+    print(f"Endpoint: {endpoint}")
+    URL += endpoint
     initial_content.controls.append(ft.ProgressRing(width=32,height=32,stroke_width=2))
 
     # asyncio.run(test())
@@ -118,6 +120,7 @@ async def send_request(page):
     params={'cubestring':cube}
 
     async with httpx.AsyncClient() as client:
+        print(f'Sending request to {URL}')
         response = await client.get(URL, params=params)
 
     if response.status_code == 200:
