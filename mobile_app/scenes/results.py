@@ -19,14 +19,16 @@ is_playing = False
 player_cube = rb()
 intial_cube = deepcopy(player_cube)
 
-URL = 'http://127.0.0.1:5000'
+URL_prefix = 'http://127.0.0.1:5000'
+URL = ''
 
 def get_results_page(page:ft.Page, switch_scene, go_back,endpoint):
     global current_page, URL
     current_page = page
     print(f"Endpoint: {endpoint}")
-    URL += endpoint
-    initial_content.controls.append(ft.ProgressRing(width=32,height=32,stroke_width=2))
+    URL = URL_prefix + endpoint
+    initial_content.controls.clear()
+    initial_content.controls.insert(0,ft.ProgressRing(width=32,height=32,stroke_width=2))
 
     # asyncio.run(test())
     threading.Thread(target=lambda: asyncio.run(send_request(page))).start()
@@ -117,39 +119,57 @@ def create_player():
 async def send_request(page):
     global move_sequence
     cube = cube_to_list()
-    params={'cubestring':cube}
+    params = {'cubestring': cube}
 
-    async with httpx.AsyncClient() as client:
-        print(f'Sending request to {URL}')
-        response = await client.get(URL, params=params)
+    try:
+        async with httpx.AsyncClient() as client:
+            print(f'Sending request to {URL}')
+            response = await client.get(URL, params=params)
 
-    if response.status_code == 200:
-        result_text = response.json().get('result', 'No result found')
-        move_sequence = result_text
-        player_cube.decode_state_lett(cube_to_list())
-        text = ft.Text(result_text)
-        player = create_player()
-        initial_content.controls.clear()
-        initial_content.controls.append(text)
-        initial_content.controls.append(player)
+        if response.status_code == 200:
+            result_text = response.json().get('result', 'No result found')
+            move_sequence = result_text
+            player_cube.decode_state_lett(cube_to_list())
+            text = ft.Text(result_text)
+            player = create_player()
+            initial_content.controls.clear()
+            initial_content.controls.append(text)
+            initial_content.controls.append(player)
+            page.update()
+            await asyncio.sleep(1)
+        else:
+            raise Exception(response.json().get('error', 'An error occurred'))
+
+    except httpx.ConnectError:
+        # Handle server connection errors
+        dialog = ft.AlertDialog(
+            title=ft.Text("Connection Error"),
+            content=ft.Text("Unable to connect to the server. Please check if the server is running."),
+            actions=[
+                ft.TextButton("OK", on_click=lambda e: close_dialog(dialog))
+            ]
+        )
+        page.overlay.append(dialog)
+        dialog.open = True
         page.update()
-        await asyncio.sleep(1)
-        
-        # posible_moves = ['R','R`','L','L`','U','U`','D','D`']
-        # moves_to_do = random.choices(posible_moves,k=5)
 
-
-        # for move in moves_to_do:
-        #     await play_move(page,move)
-        # await player_U(page)
-        # await player_D(page)
-        # await player_F(page)
-        # await player_R(page)
-        # await player_B(page)
-
-
-        
+    except Exception as e:
+        # Handle other exceptions
+        dialog = ft.AlertDialog(
+            title=ft.Text("Error"),
+            content=ft.Text(str(e)),
+            actions=[
+                ft.TextButton("OK", on_click=lambda e: close_dialog(dialog))
+            ]
+        )
+        page.overlay.append(dialog)
+        dialog.open = True
         page.update()
+
+    def close_dialog(dialog):
+        dialog.open = False
+        page.update()
+        page.overlay.remove(dialog)
 
 
 async def next_move(e,page):
@@ -418,6 +438,15 @@ async def play_move(page,move):
             await player_D(page)
         case 'D`':
             await player_D_prime(page)
+        case 'F':
+            await player_F(page)
+        case 'F`':
+            await player_F_prime(page)
+        case 'B':
+            await player_B(page)
+        case 'B`':
+            await player_B_prime(page)
+    player_cube.print_cube()
 
 # async def test():
 #     await asyncio.sleep(3)

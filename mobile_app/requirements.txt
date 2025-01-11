@@ -1,1 +1,4 @@
-flet==0.22.*
+flet==0.25.*
+numpy
+opencv-python==4.10.0.84
+httpx==0.27.2

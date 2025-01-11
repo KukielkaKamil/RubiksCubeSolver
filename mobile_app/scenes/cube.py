@@ -1,6 +1,6 @@
 import flet as ft
 import asyncio
-from helperFunctions.RubiksCube import RubiksCube as rb
+from helperFunctions.test import RubiksCube as rb
 import random
 
 
@@ -23,7 +23,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
     prev_color_element = None
     selected_color_element = None
     page.appbar = ft.AppBar(
-            leading=ft.IconButton(ft.icons.ARROW_BACK,on_click=go_back),
+            leading=ft.IconButton(ft.Icons.ARROW_BACK,on_click=go_back),
             title=ft.Text("Rubik's Cube Solver")
         )
 
@@ -34,7 +34,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
         if selected_color_element != e.control:
             prev_color_element = selected_color_element
             selected_color_element = e.control
-        selected_color_element.border = ft.border.all(2, ft.colors.BLACK) if not None else None
+        selected_color_element.border = ft.border.all(4, ft.Colors.PURPLE) if not None else None
         if prev_color_element:
             prev_color_element.border = None
 
@@ -55,7 +55,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
             current_face = face_positions[0]
         
         facet_color = cube_faces[current_face][cell].bgcolor
-        if facet_color == ft.colors.GREY:
+        if facet_color == ft.Colors.GREY:
             color_counts[current_color] += 1
         elif facet_color != current_color:
             color_counts[current_color] += 1
@@ -225,21 +225,21 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
             await reset_front_faces()
 
     up_button = ft.IconButton(
-                    ft.icons.KEYBOARD_ARROW_UP,
+                    ft.Icons.KEYBOARD_ARROW_UP,
                     icon_color = "black",
                     bgcolor="white",
                     on_click=up_face
                 )
     
     down_button = ft.IconButton(
-                    ft.icons.KEYBOARD_ARROW_DOWN,
+                    ft.Icons.KEYBOARD_ARROW_DOWN,
                     icon_color = "black",
                     bgcolor="yellow",
                     on_click= down_face,
                 )
 
     right_button = ft.IconButton(
-                    ft.icons.KEYBOARD_ARROW_RIGHT,
+                    ft.Icons.KEYBOARD_ARROW_RIGHT,
                     icon_color = "black",
                     bgcolor="red",
                     on_click=next_face,
@@ -247,7 +247,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
                 )
     
     left_button = ft.IconButton(
-                    ft.icons.KEYBOARD_ARROW_LEFT,
+                    ft.Icons.KEYBOARD_ARROW_LEFT,
                     icon_color = "black",
                     bgcolor="orange",
                     on_click = prev_face,
@@ -259,30 +259,30 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
 
         match face_positions[0]:
             case 0:
-                up_button.bgcolor = ft.colors.WHITE
+                up_button.bgcolor = ft.Colors.WHITE
                 up_button.visible = True
-                right_button.bgcolor = ft.colors.RED
+                right_button.bgcolor = ft.Colors.RED
                 right_button.visible = True
-                left_button.bgcolor = ft.colors.ORANGE
+                left_button.bgcolor = ft.Colors.ORANGE
                 left_button.visible = True
-                down_button.bgcolor = ft.colors.YELLOW
+                down_button.bgcolor = ft.Colors.YELLOW
                 down_button.visible = True
             case 1:
-                right_button.bgcolor = ft.colors.BLUE
-                left_button.bgcolor = ft.colors.GREEN
+                right_button.bgcolor = ft.Colors.BLUE
+                left_button.bgcolor = ft.Colors.GREEN
             case 2:
-                right_button.bgcolor = ft.colors.ORANGE
-                left_button.bgcolor = ft.colors.RED
+                right_button.bgcolor = ft.Colors.ORANGE
+                left_button.bgcolor = ft.Colors.RED
             case 3:
-                right_button.bgcolor = ft.colors.GREEN
-                left_button.bgcolor = ft.colors.BLUE
+                right_button.bgcolor = ft.Colors.GREEN
+                left_button.bgcolor = ft.Colors.BLUE
         if state == 1:
             up_button.visible = False
             right_button.visible = False
             left_button.visible = False
-            down_button.bgcolor = ft.colors.GREEN
+            down_button.bgcolor = ft.Colors.GREEN
         elif state == 2:
-            up_button.bgcolor = ft.colors.GREEN
+            up_button.bgcolor = ft.Colors.GREEN
             right_button.visible = False
             left_button.visible = False
             down_button.visible = False
@@ -295,7 +295,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
         for row in range(3):
             row_controls = []
             for col in range(3):
-                if bgcolor == ft.colors.TRANSPARENT and not (col == 1 and row == 1):
+                if bgcolor == ft.Colors.TRANSPARENT and not (col == 1 and row == 1):
                     cell = ft.Container(
                         bgcolor=bgcolor,
                         width=CELL_SIZE,
@@ -318,7 +318,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
                     )
                 else:
                     cell = ft.Container(
-                        bgcolor=ft.colors.GREY,
+                        bgcolor=ft.Colors.GREY,
                         width=CELL_SIZE,
                         height=CELL_SIZE,
                         border_radius=5,
@@ -381,7 +381,7 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
         grid_4 = create_grid("orange",-3.5,0)
         grid_5 = create_grid("white",0,-3.5)
         grid_6 = create_grid("yellow",0,3.5)
-        control_grid= create_grid(ft.colors.TRANSPARENT,0,0)
+        control_grid= create_grid(ft.Colors.TRANSPARENT,0,0)
     else:
         grid_1 = recreate_grid(0)
         grid_2 = recreate_grid(1)
@@ -419,19 +419,59 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
                 )
         color_elements.append(element)
     
-    def validate_cube():
-        if not all(c == 9 for c in color_counts):
-            return False
-        
-        
+    def validate_cube(e):
         validator_cube = rb()
-        validator_cube.cube = cube_to_list()
-        return False
+        cube_string= cube_to_list()
+        print(f"Cube_string: {cube_string}")
+        validator_cube.decode_state_lett(cube_string)
+        return validator_cube.verify()
     
+
+    def go_next(e):
+        """
+        Validate the cube and switch to the next scene if valid.
+
+        Args:
+            e: The event that triggered this function.
+        """
+        validate_result = validate_cube(e)
+        if validate_result == 'CUBE_OK':
+            switch_scene(e, "algorithm")
+        else:
+            show_error_dialog(validate_result)
+
+    def show_error_dialog(validate_result):
+        """
+        Show an error dialog with the validation result.
+
+        Args:
+            validate_result: The result of the cube validation.
+        """
+        dialog = ft.AlertDialog(
+            title=ft.Text("Błąd"),
+            content=ft.Text(validate_result),
+            actions=[
+                ft.TextButton("OK", on_click=lambda e: close_dialog(dialog))
+            ]
+        )
+        page.overlay.append(dialog)
+        dialog.open = True
+        page.update()
+
+    def close_dialog(dialog):
+        """
+        Close the error dialog.
+
+        Args:
+            dialog: The dialog to be closed.
+        """
+        dialog.open = False
+        page.update()
+        page.overlay.remove(dialog)
 
     def scramble_cube(e):
         scrambled_cube = rb()
-        random_moves = random.randint(10,30)
+        random_moves = random.randint(5,20)
         scrambled_cube.scramble(random_moves)
         cube_string = scrambled_cube.encode_to_cubestring()
         load_from_string(cube_string)
@@ -485,29 +525,12 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
         ft.Row(
             [
                 ft.FilledButton("Użyj aparatu",on_click = lambda e: switch_scene(e, "scan")),
-                ft.FilledButton("Dalej",on_click = lambda e: switch_scene(e, "algorithm")),
+                ft.FilledButton("Dalej",on_click =go_next),
                 ft.FilledButton("Polosuj",on_click = scramble_cube)
             ],
             alignment=ft.MainAxisAlignment.CENTER,
         )
     ])
-        
-
-    def test(e):
-        size = 50
-        full_size = (size + 10) * 3
-        for grid in cube_faces:
-            for cell in grid:
-                cell.width = size
-                cell.height = size
-        for container in grid_stack.controls:
-            container.width = full_size
-            container.height = full_size
-        cube_container.width = full_size
-        cube_container.height = full_size
-        page.update()
-
-
 
     return content
 
@@ -537,6 +560,4 @@ def cube_to_list():
             cube.append(color)
     scube = ''.join(cube)
     print(scube)
-    return(scube)
-    
-    
+    return scube

@@ -8,7 +8,7 @@ import random
 MAX_DEPTH = 20
 NUM_THREADS = 10  # Adjust based on available cores
 DB_PATH = 'cube_states.db'
-MOVES = list(range(12))  # 12 moves available
+MOVES = [0,2,4,6,8,10]  # 12 moves available
 
 # Create the database and table if it doesn't exist
 def create_db():
@@ -81,7 +81,7 @@ def process_states(queue, lock, db_path, max_depth):
         encoded_state = encode_cube(current_state)
 
         # Random exclusion of states (e.g., 10% chance of skipping after depth 2)
-        if depth > 4 and random.randint(0, 100) < 85:
+        if depth > 6 and random.randint(0, 100) <80:
             continue
 
         # Skip already visited states

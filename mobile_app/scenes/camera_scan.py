@@ -27,6 +27,15 @@ def detect_color(square):
 
     return "Unknown"
 
+# B, R, G
+adjusted_faces_colors = {
+    (0, 0, 255) : ((255, 255, 255), (0, 0, 255), (0, 255, 255), (0, 165, 255)),  # Top, Right, Bottom, Left for Face 1
+    (0, 255, 0) : ((255, 255, 255), (255, 0, 0), (0, 255, 255), (0, 255, 0)), 
+    (255, 0, 0) :((255, 255, 255), (255, 0, 0), (0, 255, 255), (0, 255, 0)),
+    (0, 165, 255) : ((255, 255, 255), (255, 0, 0), (0, 255, 255), (0, 255, 0)),
+    (255, 255, 255) : ((255, 255, 255), (255, 0, 0), (0, 255, 255), (0, 255, 0)),
+    (0, 255, 255): ((255, 255, 255), (255, 0, 0), (0, 255, 255), (0, 255, 0))
+}
 
 # Function to capture the camera feed and return it as an image
 def get_camera_frame(cap, center_color=(0, 0, 255)):
@@ -47,6 +56,15 @@ def get_camera_frame(cap, center_color=(0, 0, 255)):
     x_offset = (width - total_grid_width) // 2
     y_offset = (height - total_grid_height) // 2
 
+    # Define positions and colors for the circles
+    circle_radius = 15
+    circle_positions = {
+        "top": (width // 2, y_offset - circle_radius * 2),
+        "right": (x_offset + total_grid_width + circle_radius * 2, height // 2),
+        "bottom": (width // 2, y_offset + total_grid_height + circle_radius * 2),
+        "left": (x_offset - circle_radius * 2, height // 2),
+    }
+
     for row in range(3):
         for col in range(3):
             x1 = x_offset + col * (square_size + spacing)
@@ -62,9 +80,24 @@ def get_camera_frame(cap, center_color=(0, 0, 255)):
                 color = detect_color(square)
                 detected_colors.append(color)
                 cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(img, color, (x1 + 5, y1 + 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+                cv2.putText(img, color, (x1, y1 + 42), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+
+    # Draw the color circles with their respective colors
+    for position, center in circle_positions.items():
+        # Map positions to the face colors
+        if position == "top":
+            circle_color = adjusted_faces_colors[center_color][0]
+        elif position == "right":
+            circle_color = adjusted_faces_colors[center_color][1]
+        elif position == "bottom":
+            circle_color = adjusted_faces_colors[center_color][2]
+        elif position == "left":
+            circle_color = adjusted_faces_colors[center_color][3]
+
+        cv2.circle(img, center, circle_radius, circle_color, -1)
 
     return img, detected_colors
+
 
 
 # Function to convert an image to base64 string
@@ -102,8 +135,8 @@ def get_scan_page(page: ft.Page, switch_scene, go_back):
         return ft.Text("Camera Error: Could not open camera.")
 
     # Center block color (initially red)
-    center_colors = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 165, 0), (255, 255, 255)]
-    center_colors_symbols = ['R', 'G', 'B', 'Y', 'O', 'W']
+    center_colors = [(0, 255, 0), (0, 0, 255), (255, 0, 0), (0, 165, 255), (255, 255, 255), (0, 255, 255)]
+    center_colors_symbols = ['G', 'R', 'B', 'O', 'W', 'Y']
     current_color_index = 0
 
     # Function to update the live camera feed
@@ -129,6 +162,13 @@ def get_scan_page(page: ft.Page, switch_scene, go_back):
     update_camera()
 
     def save_colors(event, detected_colors):
+        """
+        Save the detected colors from the camera scan.
+
+        Args:
+            event: The event that triggered this function.
+            detected_colors: List of colors detected by the camera.
+        """
         saved_colors.clear()
         saved_colors.extend(detected_colors)
         next_face_button.disabled = False
@@ -136,17 +176,21 @@ def get_scan_page(page: ft.Page, switch_scene, go_back):
         page.update()
 
     def change_center_color(event):
+        """
+        Change the center color of the current face being scanned.
+
+        Args:
+            event: The event that triggered this function.
+        """
         nonlocal current_color_index, cube_colors
         saved_colors_symbols = [color[0] for color in saved_colors]
         current_face = saved_colors_symbols[:4] + [center_colors_symbols[current_color_index]] + saved_colors_symbols[4:]
         cube_colors += "".join(current_face)
-        helper_index = current_color_index +1
-        current_color_index = (current_color_index + 1) % len(center_colors)
-        print(cube_colors)
+        current_color_index += 1  # Increment the color index for the next face
         next_face_button.disabled = True
         if current_color_index == 5:
             next_face_button.text = "Finish scanning"
-        if helper_index >= 6:
+        if current_color_index >= 6:
             switch_scene(event,'cube',cube_colors)
         page.update()
 

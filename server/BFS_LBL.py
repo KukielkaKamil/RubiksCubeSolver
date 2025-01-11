@@ -172,7 +172,7 @@ available_moves_5 = [(2,8,3,8,2,8,8,3,8),(2,8,3,8,2,8,8,3),(0,8,1,8,0,8,8,1,8),(
                      (4,8,5,8,4,8,8,5,8),(4,8,5,8,4,8,8,5),(6,8,7,8,6,8,8,7,8),(6,8,7,8,6,8,8,7)] # to adjust 
 available_moves_6 = [(8,2,9,1,8,3,9,0),(8,0,9,3,8,1,9,2),(8,4,9,7,8,5,9,6),(8,6,9,5,8,7,9,4)]
 available_moves_7 = [(3,11,2,10),(1,11,0,10),(5,11,4,10),(7,11,6,10),8,9]
-available_moves_7 = [(1,11,0,10),9,10,8]
+available_moves_7 = [(0,9,1,8),9]
 # available_moves_7 = [0,1,2,3,4,5,6,7,8,9,10,11]
 
 
@@ -198,18 +198,42 @@ def solve(cubestring):
             current_moveset = available_moves_6
         if goal_state > 14:
             current_moveset = available_moves_7
-            cube.print_cube()
+
+        _move_to_str = {
+            0 : 'R',
+            1: 'R`',
+            2: 'L',
+            3: 'L`',
+            4: 'F',
+            5: 'F`',
+            6: 'B',
+            7: 'B`',
+            8:'D',
+            9: 'D`',
+            10: 'U',
+            11: 'U`'
+        }
 
 
         solution_moves = solve_with_bfs(cube,current_moveset,goal_state)
+        def flatten_moves(moves):
+            flat_list = []
+            for move in moves:
+                if isinstance(move, tuple):
+                    flat_list.extend(move)
+                else:
+                    flat_list.append(move)
+            return [_move_to_str[num] for num in flat_list]
         
         if solution_moves:
             print(f"Solution moves for goal state {goal_state}:", solution_moves)
             print("Total moves:", len(solution_moves))
             
-            solve_moves += solution_moves
+            flattened_solution_moves = flatten_moves(solution_moves)
+            solve_moves += flattened_solution_moves
         else:
             print(f"No moves needed for goal state {goal_state} (initial state)")
+            raise RuntimeError(f"Nie udało się rozwiązać kostki!")
     cube.print_cube()
     return solve_moves
 

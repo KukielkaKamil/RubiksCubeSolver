@@ -3,3 +3,4 @@ old_stuff
 TestFiles
 RubiksCube2
 server/twophase/
+*.db
