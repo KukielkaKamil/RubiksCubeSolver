@@ -19,11 +19,14 @@ def kociemba_solver():
 @app.route('/lbl', methods = ["GET"])
 def lbl_solver():
     try:
+        print(request.args)
         cubesting = request.args.get('cubestring')
         r = lbl_solve(cubesting)
         return jsonify(result = r), 200
     except Exception as e:
-        return jsonify(error=str(e)), 500
+        import traceback
+        return jsonify(error=str(e), traceback=traceback.format_exc()), 500
+
 
 @app.route('/ml', methods = ["GET"])
 def ml_solver():

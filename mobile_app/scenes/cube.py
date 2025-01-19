@@ -17,6 +17,7 @@ color_counts={
     "white": 1,
     "yellow": 1
 }
+is_button_locked = False
 #Loading th scene
 def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
     current_color = "white"
@@ -65,7 +66,11 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
         page.update()
 
     async def next_face(e):
+        global is_button_locked
+        if is_button_locked:
+            return
         if face_positions[1] != 1 and face_positions[2] != 1:
+            is_button_locked = True
             current_grid = face_positions[0] % 4  # Current face index (0 to 3)
             next_grid = (current_grid + 1) % 4  # Next grid when moving forward
 
@@ -97,9 +102,15 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
             face_positions[0] = next_grid
             update_move_buttons(0)
             page.update()
+            await asyncio.sleep(0.3)  # Allow 300ms delay before unlocking
+            is_button_locked = False
 
     async def prev_face(e):
+        global is_button_locked
+        if is_button_locked:
+            return
         if face_positions[1] != 1 and face_positions[2] != 1:
+            is_button_locked = True
             current_grid = face_positions[0] % 4  # Current face index (0 to 3)
             prev_grid = (current_grid + 3) % 4  # Previous grid when moving backward
 
@@ -132,6 +143,9 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
             face_positions[0] = prev_grid
             update_move_buttons(0)
             page.update()
+
+            await asyncio.sleep(0.3)  # Allow 300ms delay before unlocking
+            is_button_locked = False
 
 
 
@@ -169,6 +183,9 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
             
 
     async def up_face(e):
+        global is_button_locked
+        if is_button_locked:
+            return
         if face_positions[2] == 1:
             for cell in cube_faces[0]:
                 cell.offset = ft.transform.Offset(0, 0)
@@ -195,8 +212,13 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
             page.update()
             await asyncio.sleep(0.3)
             await reset_front_faces()
+        await asyncio.sleep(0.3)  # Allow 300ms delay before unlocking
+        is_button_locked = False
 
     async def down_face(e):
+        global is_button_locked
+        if is_button_locked:
+            return
         if face_positions[1] == 1:
         #     reset_front_faces()
             for cell in cube_faces[0]:
@@ -223,7 +245,8 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
             page.update()
             await asyncio.sleep(0.3)
             await reset_front_faces()
-
+        await asyncio.sleep(0.3)  # Allow 300ms delay before unlocking
+        is_button_locked = False
     up_button = ft.IconButton(
                     ft.Icons.KEYBOARD_ARROW_UP,
                     icon_color = "black",
@@ -415,13 +438,17 @@ def get_cube_page(page:ft.Page, switch_scene, go_back, cube_string = ""):
                     border_radius=ft.border_radius.all(100),
                     col=1,
                     alignment=ft.alignment.center,
+                    border=ft.border.all(4, ft.Colors.PURPLE) if color == "white" else None,
                     on_click=lambda e, color = color: change_color(e,color)
                 )
         color_elements.append(element)
-    
+    selected_color_element = next(e for e in color_elements if e.bgcolor == "white")
     def validate_cube(e):
         validator_cube = rb()
-        cube_string= cube_to_list()
+        try:
+            cube_string= cube_to_list()
+        except TypeError as te:
+            return "Wprowadź wszystkie kolory"
         print(f"Cube_string: {cube_string}")
         validator_cube.decode_state_lett(cube_string)
         return validator_cube.verify()
@@ -558,6 +585,9 @@ def cube_to_list():
         for cell in cube_faces[grid]:
             color = color_to_letter(cell.bgcolor)
             cube.append(color)
-    scube = ''.join(cube)
+    try:
+        scube = ''.join(cube)
+    except TypeError as tr:
+        raise tr
     print(scube)
     return scube

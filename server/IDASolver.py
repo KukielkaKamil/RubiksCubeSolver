@@ -169,22 +169,36 @@ def solve(cubestring:str):
 if __name__ == "__main__":
     # 1. Tworzymy kostkę i tasujemy ją
     cube = RubiksCube()
-    cube.scramble(10)  # np. 5 losowych ruchów
+    # cube.scramble(10)  # np. 5 losowych ruchów
 
-    cube2 = RubiksCube()
-    cube2.cube = cube.cube
+    # cube2 = RubiksCube()
+    # cube2.cube = cube.cube
 
-    print("Scrambled cube state:")
+    # print("Scrambled cube state:")
+    # cube.print_cube()
+
+    # # 2. Szukamy rozwiązania z użyciem IDA*
+    # solution_moves = ida_star_solve(cube)
+
+    # if solution_moves is not None:
+    #     print("\nZnaleziono sekwencję ruchów (długość: {}):".format(len(solution_moves)))
+    #     print(solution_moves)
+    #     cube2.do_moves(solution_moves)
+    #     cube2.print_cube()
+    #     # Możemy wyświetlić, co każdy indeks oznacza (np. R=0, R'=1 itd.)
+    # else:
+    #     print("\nNie znaleziono rozwiązania w dopuszczalnej głębokości.")
+
+    # solver = solve("GGRGGBWWBYGGRRBRRBYOYWBYWBGOOYOOYWROBWRBWROOBGGWYYWRYO")
+    # print(solver)
+    cube.decode_state_lett("GGRGGBWWBYGGRRBRRBYOYWBYWBGOOYOOYWROBWRBWROOBGGWYYWRYO")
     cube.print_cube()
-
-    # 2. Szukamy rozwiązania z użyciem IDA*
-    solution_moves = ida_star_solve(cube)
-
-    if solution_moves is not None:
-        print("\nZnaleziono sekwencję ruchów (długość: {}):".format(len(solution_moves)))
-        print(solution_moves)
-        cube2.do_moves(solution_moves)
-        cube2.print_cube()
-        # Możemy wyświetlić, co każdy indeks oznacza (np. R=0, R'=1 itd.)
-    else:
-        print("\nNie znaleziono rozwiązania w dopuszczalnej głębokości.")
+    cube.R_prime()
+    cube.F()
+    cube.L_prime()
+    cube.F_prime()
+    cube.F_prime()
+    cube.U_prime()
+    cube.R_prime()
+    print("SOLVED CUBE:")
+    cube.print_cube()

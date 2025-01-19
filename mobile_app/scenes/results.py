@@ -15,23 +15,34 @@ move_sequence = []
 move_index = 0
 current_page = None
 is_playing = False
-
+text_elements = []
 player_cube = rb()
+is_button_locked = False
 intial_cube = deepcopy(player_cube)
 
 URL_prefix = 'http://127.0.0.1:5000'
 URL = ''
+def reset_values():
+    global player_cells, move_sequence, move_index, is_playing, text_elements
+    player_cells = []
+    move_sequence = []
+    move_index = 0
+    is_playing = False
+    text_elements = []
 
 def get_results_page(page:ft.Page, switch_scene, go_back,endpoint):
-    global current_page, URL
+    global current_page, URL,player_cube
+    reset_values()
+    player_cube = rb()
     current_page = page
-    print(f"Endpoint: {endpoint}")
+    # print(f"Endpoint: {endpoint}")
     URL = URL_prefix + endpoint
     initial_content.controls.clear()
     initial_content.controls.insert(0,ft.ProgressRing(width=32,height=32,stroke_width=2))
 
     # asyncio.run(test())
-    threading.Thread(target=lambda: asyncio.run(send_request(page))).start()
+    asyncio.run(send_request(page))
+
 
     return initial_content
 
@@ -41,17 +52,17 @@ def change_color(cell:ft.Container,color_symbol):
 
     match color_symbol:
         case "🟩":
-            color = ft.colors.GREEN
+            color = ft.Colors.GREEN
         case "🟥":
-            color = ft.colors.RED
+            color = ft.Colors.RED
         case "🟦": 
-            color = ft.colors.BLUE
+            color = ft.Colors.BLUE
         case "🟧":
-            color = ft.colors.ORANGE
+            color = ft.Colors.ORANGE
         case "⬜":
-            color = ft.colors.WHITE
+            color = ft.Colors.WHITE
         case "🟨":
-            color = ft.colors.YELLOW
+            color = ft.Colors.YELLOW
 
     cell.bgcolor = color
 
@@ -77,7 +88,7 @@ def create_player():
     # player_cells.append(vstrp_cels)
     # player_cells.append(hstrp_cels)
     player_content = ft.Container(grid_stack, width=GRID_SIZE, height=GRID_SIZE)
-
+    
     controler_buttons = ft.Row(
             [
                 ft.IconButton(
@@ -117,79 +128,134 @@ def create_player():
 
 
 async def send_request(page):
-    global move_sequence
+    global move_sequence, text_elements
     cube = cube_to_list()
     params = {'cubestring': cube}
 
     try:
-        async with httpx.AsyncClient() as client:
-            print(f'Sending request to {URL}')
+        async with httpx.AsyncClient(timeout=None) as client:
+            # print(f'Sending request to {URL}')
             response = await client.get(URL, params=params)
 
         if response.status_code == 200:
-            result_text = response.json().get('result', 'No result found')
-            move_sequence = result_text
-            player_cube.decode_state_lett(cube_to_list())
-            text = ft.Text(result_text)
-            player = create_player()
-            initial_content.controls.clear()
-            initial_content.controls.append(text)
-            initial_content.controls.append(player)
-            page.update()
-            await asyncio.sleep(1)
+            # Ensure JSON response has the expected structure
+            response_data = response.json()
+            result_text = response_data.get('result', None)
+            # result_text = ['R','B','B','B','B']
+
+            if result_text:
+                # Update the UI with the result
+                move_sequence = result_text
+                player_cube.decode_state_lett(cube_to_list())
+
+                player = create_player()
+                initial_content.controls.clear()
+                initial_content.controls.append(player)
+                moves_container = ft.Row(wrap=True, spacing=5)
+                for letter in move_sequence:
+                    text_container = ft.Container(
+                        content=ft.Text(
+                            value=letter,
+                            size=20,
+                            color="white",
+                            weight=ft.FontWeight.BOLD,
+                            text_align="center",
+                        ),
+                        width=30,
+                        height=30,
+                        bgcolor="transparent",
+                        alignment=ft.alignment.center,
+                        border_radius=5,
+                        animate=ft.Animation(duration=300, curve=ft.AnimationCurve.EASE_IN_OUT),
+                    )
+                    text_elements.append(text_container)
+                    moves_container.controls.append(text_container)
+                update_colors(0)
+                initial_content.controls.append(moves_container)
+
+                page.update()
+            else:
+                raise ValueError("Invalid response from server: Missing 'result' field")
         else:
-            raise Exception(response.json().get('error', 'An error occurred'))
+            error_message = response.json().get('error', 'An error occurred')
+            raise Exception(error_message)
 
     except httpx.ConnectError:
         # Handle server connection errors
-        dialog = ft.AlertDialog(
-            title=ft.Text("Connection Error"),
-            content=ft.Text("Unable to connect to the server. Please check if the server is running."),
-            actions=[
-                ft.TextButton("OK", on_click=lambda e: close_dialog(dialog))
-            ]
-        )
-        page.overlay.append(dialog)
-        dialog.open = True
-        page.update()
-
+        show_error_dialog(page, "Connection Error", "Unable to connect to the server. Please check if the server is running.")
     except Exception as e:
         # Handle other exceptions
-        dialog = ft.AlertDialog(
-            title=ft.Text("Error"),
-            content=ft.Text(str(e)),
-            actions=[
-                ft.TextButton("OK", on_click=lambda e: close_dialog(dialog))
-            ]
-        )
-        page.overlay.append(dialog)
-        dialog.open = True
-        page.update()
+        show_error_dialog(page, "Error", str(e))
 
-    def close_dialog(dialog):
-        dialog.open = False
-        page.update()
-        page.overlay.remove(dialog)
-
-
-async def next_move(e,page):
-    global move_index, move_sequence
-    if move_index < len(move_sequence):
-        await play_move(page,move_sequence[move_index])
-        move_index += 1
-
-async def prev_move(e,page):
-    global move_index,move_sequence
-    # print("doing this")
-    # print (move_index)
-    if move_index > 0:
-        prev_move = move_sequence[move_index]
-        if prev_move.startswith("`") and len(prev_move) == 2:
-            inv_move = prev_move[1]  # Return the character without the backtick
+def update_colors(index):
+    global current_page
+    for i, text_container in enumerate(text_elements):
+        if i == index:
+            # Highlight the current letter
+            text_container.bgcolor = "#f39c12"
+            text_container.content.color = "black"
+        elif i > index:
+            # Letters after the current one
+            text_container.bgcolor = "transparent"
+            text_container.content.color = "#aaaaaa"
         else:
-            inv_move = prev_move+"`"  # Add a backtick to the character
-        await play_move(page,inv_move)
+            # Letters before the current one
+            text_container.bgcolor = "transparent"
+            text_container.content.color = "white"
+    current_page.update()
+
+
+def show_error_dialog(page, title, message):
+    """Displays an error dialog."""
+    dialog = ft.AlertDialog(
+        title=ft.Text(title),
+        content=ft.Text(message),
+        actions=[
+            ft.TextButton("OK", on_click=lambda e: close_dialog(page, dialog))
+        ]
+    )
+    page.overlay.append(dialog)
+    dialog.open = True
+    page.update()
+
+
+def close_dialog(page, dialog):
+    """Closes an error dialog."""
+    dialog.open = False
+    page.overlay.remove(dialog)
+    page.update()
+
+async def next_move(e, page):
+    global move_index, move_sequence, is_button_locked
+    if is_button_locked:  # Prevent execution if the button is locked
+        return
+
+    if move_index < len(move_sequence):
+        is_button_locked = True  # Lock the button temporarily
+        await play_move(page, move_sequence[move_index])
+        move_index += 1
+        update_colors(move_index)
+        await asyncio.sleep(0.3)  # Allow 300ms delay before unlocking
+        is_button_locked = False  # Unlock the button
+
+async def prev_move(e, page):
+    global move_index, move_sequence, is_button_locked
+    if is_button_locked:  # Prevent execution if the button is locked
+        return
+
+    if move_index > 0:
+        is_button_locked = True  # Lock the button temporarily
         move_index -= 1
+        update_colors(move_index)
+        prev_move = move_sequence[move_index]
+        if prev_move.endswith("`"):
+            inv_move = prev_move[:-1]  # Return the character without the backtick
+        else:
+            inv_move = prev_move + "`"  # Add a backtick to the character
+        await play_move(page, inv_move)
+        await asyncio.sleep(0.3)  # Allow 300ms delay before unlocking
+        is_button_locked = False  # Unlock the button
+
 
 async def play_sequence(e,page):
     global is_playing,move_sequence
@@ -220,7 +286,7 @@ def create_grid(height=3,width=3,offset_x=0,offset_y=0):
             row_controls = []
             for col in range(width):
                 cell = ft.Container(
-                    bgcolor=ft.colors.BLACK,
+                    bgcolor=ft.Colors.PURPLE,
                     width=CELL_SIZE,
                     height=CELL_SIZE,
                     border_radius=5,
@@ -244,39 +310,47 @@ def get_color_at(index):
 
     match position:
         case "🟩":
-            color = ft.colors.GREEN
+            color = ft.Colors.GREEN
         case "🟥":
-            color = ft.colors.RED
+            color = ft.Colors.RED
         case "🟦": 
-            color = ft.colors.BLUE
+            color = ft.Colors.BLUE
         case "🟧":
-            color = ft.colors.ORANGE
+            color = ft.Colors.ORANGE
         case "⬜":
-            color = ft.colors.WHITE
+            color = ft.Colors.WHITE
         case "🟨":
-            color = ft.colors.YELLOW
+            color = ft.Colors.YELLOW
     return color
 
-async def slide_side(page,indexes:dict,offset_x,offset_y):
+async def slide_side(page, indexes: dict, offset_x, offset_y):
+    # Disable animations temporarily to set the initial offset
     for cell in indexes.keys():
         player_cells[0][cell].animate_offset = None
         player_cells[1][cell].animate_offset = None
-        player_cells[0][cell].offset = ft.Offset(offset_x,offset_y)
-        player_cells[1][cell].offset = ft.Offset(0,0)
-        player_cells[1][cell].bgcolor=player_cells[0][cell].bgcolor
+        player_cells[0][cell].offset = ft.Offset(offset_x, offset_y)
+        player_cells[1][cell].offset = ft.Offset(0, 0)
+        player_cells[1][cell].bgcolor = player_cells[0][cell].bgcolor
         player_cells[0][cell].bgcolor = get_color_at(indexes[cell])
     page.update()
-    await asyncio.sleep(0.3)
+    
+    await asyncio.sleep(0.3)  # Wait for visual update
+
+    # Re-enable animations for the return transition
     for fcell in indexes.keys():
         player_cells[0][fcell].animate_offset = ft.animation.Animation(300)
         player_cells[1][fcell].animate_offset = ft.animation.Animation(300)
     page.update()
+    
     await asyncio.sleep(0.1)
+
+    # Reset offsets for return animation
     for fcell in indexes.keys():
-        player_cells[0][fcell].offset = ft.Offset(0,0)
-        player_cells[1][fcell].offset = ft.Offset(-1 * offset_x,-1 * offset_y)
+        player_cells[0][fcell].offset = ft.Offset(0, 0)
+        player_cells[1][fcell].offset = ft.Offset(-1 * offset_x, -1 * offset_y)
     page.update()
     await asyncio.sleep(0.3)
+
 
 
     
@@ -353,69 +427,77 @@ async def player_D_prime(page):
     player_cube.D_prime()
 
 async def player_F(page):
-    for cell in range(9):
-        player_container.rotate = ft.Rotate(0.5 * math.pi,ft.alignment.center)
+    # for cell in range(9):
+    player_container.rotate = ft.Rotate(0.5 * math.pi,ft.alignment.center)
     page.update()
     await asyncio.sleep(0.3)
 
-    for cell in range(9):
-        player_container.animate_rotation = None
-        player_container.rotate = ft.Rotate(0,ft.alignment.center)
+    # for cell in range(9):
+    player_container.animate_rotation = None
+    page.update()
+    player_container.rotate = ft.Rotate(0,ft.alignment.center)
     page.update()
     player_cube.F()
-
     for cell in range(9):
         player_cells[0][cell].bgcolor = get_color_at(cell)
-        # player_container.animate_rotation = ft.animation.Animation(300)
+    page.update()
+    await asyncio.sleep(0.3)
+    player_container.animate_rotation = ft.animation.Animation(300)
+    page.update()
+
 
 async def player_F_prime(page):
-    for cell in range(9):
-        player_container.rotate = ft.Rotate(-0.5 * math.pi,ft.alignment.center)
+
+    player_container.rotate = ft.Rotate(-0.5 * math.pi,ft.alignment.center)
     page.update()
     await asyncio.sleep(0.3)
-
-    for cell in range(9):
-        player_container.animate_rotation = None
-        player_container.rotate = ft.Rotate(0,ft.alignment.center)
+    player_container.animate_rotation = None
     page.update()
-    player_cube.F()
+    player_container.rotate = ft.Rotate(0,ft.alignment.center)
+    page.update()
 
+    player_cube.F_prime()
     for cell in range(9):
         player_cells[0][cell].bgcolor = get_color_at(cell)
+    page.update()
+    await asyncio.sleep(0.3)
+    player_container.animate_rotation = ft.animation.Animation(300)
+    page.update()
 
 async def player_B(page):
     for cell in range(9):
-        player_container.controls[0].animate_rotation = ft.animation.Animation(300)
-        player_cells[1][cell].offset = ft.Offset(0,0)
+        player_cells[1][cell].bgcolor = ft.Colors.PURPLE
+        # print(player_cells[1][cell].offset)
+        player_cells[1][cell].offset = ft.Offset(0, 0)
+    player_container.controls[0].animate_rotation = None
+    player_container.controls[0].rotate = ft.Rotate(0.5 * math.pi, ft.alignment.center)
     page.update()
     await asyncio.sleep(0.1)
 
-    for cell in range(9):
-        player_cells[1][cell].bgcolor = ft.colors.BLACK
-        player_container.controls[0].rotate = ft.Rotate(-0.5 * math.pi,ft.alignment.center)
+    player_container.controls[0].animate_rotation = ft.animation.Animation(300)
     page.update()
+    player_container.controls[0].rotate = ft.Rotate(0, ft.alignment.center)
     await asyncio.sleep(0.3)
-
-    player_container.controls[0].animate_rotation = None
-    player_container.controls[0].rotate = ft.Rotate(0,ft.alignment.center)
     page.update()
     player_cube.B()
 
+
+
 async def player_B_prime(page):
+
     for cell in range(9):
-        player_container.controls[0].animate_rotation = ft.animation.Animation(300)
-        player_cells[1][cell].offset = ft.Offset(0,0)
+        player_cells[1][cell].bgcolor = ft.Colors.PURPLE
+        # print(player_cells[1][cell].offset)
+        player_cells[1][cell].offset = ft.Offset(0, 0)
+    player_container.controls[0].animate_rotation = None
+    player_container.controls[0].rotate = ft.Rotate(-0.5 * math.pi, ft.alignment.center)
     page.update()
     await asyncio.sleep(0.1)
 
-    for cell in range(9):
-        player_cells[1][cell].bgcolor = ft.colors.BLACK
-        player_container.controls[0].rotate = ft.Rotate(0.5 * math.pi,ft.alignment.center)
+    player_container.controls[0].animate_rotation = ft.animation.Animation(300)
     page.update()
+    player_container.controls[0].rotate = ft.Rotate(0, ft.alignment.center)
     await asyncio.sleep(0.3)
-
-    player_container.controls[0].animate_rotation = None
-    player_container.controls[0].rotate = ft.Rotate(0,ft.alignment.center)
     page.update()
     player_cube.B()
 
@@ -446,7 +528,9 @@ async def play_move(page,move):
             await player_B(page)
         case 'B`':
             await player_B_prime(page)
-    player_cube.print_cube()
+    # await asyncio.sleep(0.3)
+    print(f"Move index: {move_index}")
+    # player_cube.print_cube()
 
 # async def test():
 #     await asyncio.sleep(3)

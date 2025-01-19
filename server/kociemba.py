@@ -60,21 +60,22 @@ def kociemba_cube(input_str):
 
 if __name__ == '__main__':
 
-    moves_to_do = 'U3 (1f)'
-    # print(moves_to_list(moves_to_do))
+    # moves_to_do = 'U3 (1f)'
+    # # print(moves_to_list(moves_to_do))
 
     import RubiksCube as rb
-    from copy import deepcopy
-    moves_to_do = 'U3 (1f)'
-    # print(moves_to_list(moves_to_do))
-    tc = rb.RubiksCube()
-    tc.scramble(20)
-    solve_cube = deepcopy(tc)
-    test2 = "".join(tc.encode_to_cubestring())
-    print(test2)
-    moves = solve(test2)
-    print(moves)
-
+    # from copy import deepcopy
+    # moves_to_do = 'U3 (1f)'
+    # # print(moves_to_list(moves_to_do))
+    # tc = rb.RubiksCube()
+    # tc.scramble(20)
+    # solve_cube = deepcopy(tc)
+    # test2 = "".join(tc.encode_to_cubestring())
+    # print(test2)
+    # moves = solve(test2)
+    # print(moves)
+    solve_cube = rb.RubiksCube()
+    moves = solve('WOWRGYYWYRBGORGBORYGRWBWGBWYGGOOYORGBYRRWROGBOBOWYBBYW')
     move_table={
     'R': 0,
     'R`': 1,

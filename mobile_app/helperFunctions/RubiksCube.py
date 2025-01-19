@@ -428,6 +428,60 @@ class RubiksCube:
             return False
         
         return True
+    
+    def verify_color_distribution(self):
+        """
+        Checks that there are exactly 9 facelets of each color.
+        Returns:
+            True if color distribution is correct,
+            otherwise returns an error message (string).
+        """
+        # Tally up the colors on the cube
+        color_count = {}
+        for facelet in self.cube:
+            color_count[facelet] = color_count.get(facelet, 0) + 1
+
+        # We expect 6 colors total, each appearing exactly 9 times
+        for color in ["🟩","🟥","🟦","🟧","⬜","🟨"]:
+            if color_count.get(color, 0) != 9:
+                return f"Error: Expected 9 of {color}, found {color_count.get(color, 0)}"
+        
+        return True
+    
+    def verify_centers(self):
+        """
+        Checks that each face's center has the correct color (optional rule).
+        Returns:
+            True if centers are as expected,
+            otherwise returns an error message.
+        """
+        # Usually the index of the center on a face is faceStart + 4
+        # By default in your code:
+        #   FRONT = 0 => center index = 0*9 + 4 = 4
+        #   RIGHT = 1 => center index = 9 + 4 = 13
+        #   BACK = 2 => center index = 18 + 4 = 22
+        #   LEFT = 3 => center index = 27 + 4 = 31
+        #   TOP = 4 => center index = 36 + 4 = 40
+        #   BOTTOM=5 => center index = 45 + 4 = 49
+
+        # We'll define what's "expected"
+        # This is arbitrary if your code re-labels faces with rotations.
+        expected_centers = {
+            FACE.FRONT: "🟩",
+            FACE.RIGHT: "🟥",
+            FACE.BACK:  "🟦",
+            FACE.LEFT:  "🟧",
+            FACE.TOP:   "⬜",
+            FACE.BOTTOM:"🟨"
+        }
+
+        for face in FACE:
+            center_index = face.value * 9 + 4
+            expected_color = expected_centers[face]
+            if self.cube[center_index] != expected_color:
+                return f"Error: Center of {face.name} is {self.cube[center_index]}, expected {expected_color}"
+        return True
+
 
 _corner_orientation = {
     (42,0,29):('⬜','🟩','🟧'),
@@ -526,78 +580,5 @@ def get_ud_slice_point(cube):
     for n,k in positions:
         sum += binomal_coefficient(n,k)
     return sum
-
-
-class RubiksCubeValidator:
-    def __init__(self, cube: RubiksCube):
-        self.cube = cube
-
-    def validate(self):
-        return all([
-            self._validate_facelet_count(),
-            self._validate_centers(),
-            self._validate_edges_and_corners(),
-        ])
-
-    def _validate_facelet_count(self):
-        """
-        Validates that there are exactly 9 of each color.
-        """
-        color_counts = {color: 0 for color in RubiksCube._color_to_int.keys()}
-        for facelet in self.cube.cube:
-            if facelet not in color_counts:
-                return False  # Invalid facelet color
-            color_counts[facelet] += 1
-        
-        return all(count == 9 for count in color_counts.values())
-
-    def _validate_centers(self):
-        """
-        Validates that the centers of the cube are correctly positioned.
-        Each face should have a unique center color.
-        """
-        center_positions = [4, 13, 22, 31, 40, 49]  # Indices of the centers
-        expected_colors = ["🟩", "🟥", "🟦", "🟧", "⬜", "🟨"]
-        
-        for i, pos in enumerate(center_positions):
-            if self.cube.cube[pos] != expected_colors[i]:
-                return False
-        return True
-
-    def _validate_edges_and_corners(self):
-        """
-        Validates the edge and corner pieces for valid color combinations.
-        """
-        # Valid edge and corner combinations (based on cube rules)
-        valid_edges = [
-            {"🟩", "🟥"}, {"🟩", "🟦"}, {"🟩", "🟧"}, {"🟩", "⬜"},
-            {"🟥", "⬜"}, {"🟥", "🟨"}, {"🟥", "🟦"},
-            {"🟦", "⬜"}, {"🟦", "🟨"}, {"🟧", "⬜"}, {"🟧", "🟨"},
-            {"🟧", "🟦"}
-        ]
-        valid_corners = [
-            {"🟩", "🟥", "⬜"}, {"🟩", "🟥", "🟨"}, {"🟩", "🟦", "⬜"}, {"🟩", "🟦", "🟨"},
-            {"🟩", "🟧", "⬜"}, {"🟩", "🟧", "🟨"}, {"🟥", "⬜", "🟦"}, {"🟥", "🟦", "🟨"},
-            {"🟧", "⬜", "🟦"}, {"🟧", "🟦", "🟨"}
-        ]
-        
-        edge_positions = [
-            (1, 43), (3, 39), (5, 41), (7, 37),  # Edges on the top
-            (10, 19), (12, 32), (14, 21), (16, 28),  # Middle ring edges
-            (25, 46), (23, 50), (21, 48), (19, 52)  # Bottom edges
-        ]
-        corner_positions = [
-            (0, 36, 9), (2, 9, 18), (6, 36, 27), (8, 27, 18),  # Top corners
-            (45, 11, 26), (47, 26, 15), (51, 6, 44), (53, 15, 44)  # Bottom corners
-        ]
-        
-        for edge in edge_positions:
-            if {self.cube.cube[edge[0]], self.cube.cube[edge[1]]} not in valid_edges:
-                return False
-
-        for corner in corner_positions:
-            if {self.cube.cube[corner[0]], self.cube.cube[corner[1]], self.cube.cube[corner[2]]} not in valid_corners:
-                return False
-
-        return True
+    
 

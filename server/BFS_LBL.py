@@ -178,8 +178,9 @@ available_moves_7 = [(0,9,1,8),9]
 
 
 def solve(cubestring):
+    cube_list = list(cubestring)
     cube = rb.RubiksCube()
-    cube.decode_state_lett(cubestring)
+    cube.decode_state_lett(cube_list)
     cube.print_cube()
     cube.total_moves = 0
     solve_moves = []
@@ -228,22 +229,20 @@ def solve(cubestring):
         if solution_moves:
             print(f"Solution moves for goal state {goal_state}:", solution_moves)
             print("Total moves:", len(solution_moves))
-            
             flattened_solution_moves = flatten_moves(solution_moves)
             solve_moves += flattened_solution_moves
         else:
             print(f"No moves needed for goal state {goal_state} (initial state)")
-            raise RuntimeError(f"Nie udało się rozwiązać kostki!")
+    if not solve_moves:
+        print("No solution found.")
+        raise RuntimeError(f"Nie udało się rozwiązać kostki!")
     cube.print_cube()
     return solve_moves
 
 if __name__ == '__main__':
-    test_cube = rb.RubiksCube()
 
-    test_cube.scramble(20)
-    test_cube.print_cube()
 
-    result = solve(test_cube.encode_to_cubestring())
+    result = solve('YYBYGOYRYWRBBRBBRBRWWWBWWBROOGGOOGGGGRYWWGRGROYOOYBWYO')
     print(result)
 
 
