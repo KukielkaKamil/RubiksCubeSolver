@@ -1,3 +1,0 @@
-import magiccube
-cube = magiccube.Cube(3,"WWWWWWWWWOOOOOOOOOGGGGGGGGGRRRRRRRRRBBBBBBBBBYYYYYYYYY")
-print(cube)
