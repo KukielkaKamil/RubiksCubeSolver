@@ -18,7 +18,7 @@ from RubiksCube import RubiksCube  # import Twojej klasy kostki      # w razie p
 
 
 
-MAX_DEPTH = 17  # maksymalna głębokość (w praktyce i tak przerwiemy wcześniej, 
+MAX_DEPTH = 10  # maksymalna głębokość (w praktyce i tak przerwiemy wcześniej, 
                 # gdy h+g przewyższy bound)
 
 # Ruchy (lista liczb 0..11) – patrz rubiks_cube_class: do_move():

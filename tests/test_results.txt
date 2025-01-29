@@ -1,0 +1,72 @@
+STATYSTYKI DLA ALGORYTMU kociemba
+Tests run: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 100/100 [00:39<00:00,  2.54it/s]
+Statystyki dla ruchów
+count    100.000000
+mean      25.540000
+std       13.012364
+min        1.000000
+25%       16.750000
+50%       24.500000
+75%       37.000000
+max       47.000000
+dtype: float64
+Statystyki dla czasu
+count    100.000000
+mean       0.393290
+std        0.026290
+min        0.334074
+25%        0.375962
+50%        0.390594
+75%        0.409092
+max        0.456103
+dtype: float64
+
+
+STATYSTYKI DLA ALGORYTMU LBL
+Tests run: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████| 100/100 [17:03<00:00, 10.24s/it] 
+Statystyki dla ruchów
+count    100.000000
+mean     155.560000
+std       51.791798
+min        1.000000
+25%      145.750000
+50%      169.000000
+75%      185.250000
+max      228.000000
+dtype: float64
+Statystyki dla czasu
+count    100.000000
+mean      10.235080
+std        4.691501
+min        0.278719
+25%        7.816101
+50%       10.839729
+75%       13.586153
+max       21.022195
+dtype: float64
+
+
+ML do 13
+
+Statystyki dla ruchów
+count    40.0000
+mean      6.2000
+std       3.2597
+min       1.0000
+25%       3.7500
+50%       6.0000
+75%       8.2500
+max      13.0000
+dtype: float64
+Statystyki dla czasu
+count     40.000000
+mean      37.182870
+std      108.865086
+min        0.493112
+25%        1.320481
+50%        6.799112
+75%       21.927584
+max      655.144979
+dtype: float64
+
+(RubiksCube2) C:\Users\kkuki\Desktop\Projects\Python\RubiksCubeSolver\tests>db.csv

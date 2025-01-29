@@ -18,7 +18,7 @@ from RubiksCube import RubiksCube  # import Twojej klasy kostki      # w razie p
 
 
 
-MAX_DEPTH = 17  # maksymalna głębokość (w praktyce i tak przerwiemy wcześniej, 
+MAX_DEPTH = 16.0  # maksymalna głębokość (w praktyce i tak przerwiemy wcześniej, 
                 # gdy h+g przewyższy bound)
 
 # Ruchy (lista liczb 0..11) – patrz rubiks_cube_class: do_move():
@@ -92,6 +92,10 @@ def ida_search(cube: RubiksCube, bound, depth=0, path=None, prev_move=None):
     if path is None:
         path = []
 
+    # Jeśli przekroczyliśmy pewien sensowny limit (żeby nie iść zbyt głęboko):
+    if bound > MAX_DEPTH:
+        return (False, float('inf'))
+
     # Sprawdź, czy kostka jest rozwiązana:
     if cube.is_solved():
         return (True, path)
@@ -105,9 +109,6 @@ def ida_search(cube: RubiksCube, bound, depth=0, path=None, prev_move=None):
         # nie mieścimy się w aktualnym bound
         return (False, f)
 
-    # Jeśli przekroczyliśmy pewien sensowny limit (żeby nie iść zbyt głęboko):
-    if depth > MAX_DEPTH:
-        return (False, float('inf'))
 
     min_cost = float('inf')
 
