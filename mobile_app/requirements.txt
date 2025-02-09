@@ -1,4 +1,4 @@
-flet==0.25.*
-numpy
-opencv-python==4.10.0.84
+flet==0.26.0
+numpy==1.26.4 --extra-index-url https://pypi.flet.dev
+opencv-python==4.10.0.84 --extra-index-url https://pypi.flet.dev
 httpx==0.27.2

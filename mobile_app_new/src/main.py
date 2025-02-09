@@ -3,12 +3,10 @@ from math import pi
 import asyncio
 
 # Your scene imports
-from scenes.settings import get_page
 from scenes.cube import get_cube_page
 from scenes.algorithm_selection import get_algorithm_page
 from scenes.results import get_results_page
 from scenes.camera_scan import get_scan_page
-
 
 def main(page: ft.Page):
     scene_stack = []
@@ -20,6 +18,10 @@ def main(page: ft.Page):
     page.overlay.append(ph)
 
     def switch_scene(e, scene_name, option=""):
+        # If we're switching from the scan scene to cube,
+        # remove the scan scene from the stack so that back won't return to it.
+        if scene_stack and scene_stack[-1] == "scan" and scene_name == "cube":
+            scene_stack.pop()
         if scene_stack:
             current_scene = scene_stack[-1]
             if current_scene != scene_name:
@@ -51,8 +53,6 @@ def main(page: ft.Page):
         if scene_name == "main_scene":
             page.appbar = None
             page.add(main_content)
-        elif scene_name == "settings":
-            page.add(get_page(page, switch_scene, go_back))
         elif scene_name == "cube":
             page.add(get_cube_page(page, switch_scene, go_back, option))
         elif scene_name == "algorithm":
@@ -123,6 +123,4 @@ def main(page: ft.Page):
     page.add(main_content)
     scene_stack.append("main_scene")
 
-
 ft.app(main)
-    
