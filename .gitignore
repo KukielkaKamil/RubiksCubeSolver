@@ -4,3 +4,4 @@ TestFiles
 RubiksCube2
 server/twophase/
 *.db
+*.apk
