@@ -1,7 +1,7 @@
 [project]
-name = "mobile_app_new"
-version = "0.1.0"
-description = ""
+name = "RubiksCubeSolver"
+version = "1.0.0"
+description = "Engeenering project"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
@@ -17,17 +17,17 @@ dependencies = [
 [tool.flet]
 # org name in reverse domain name notation, e.g. "com.mycompany".
 # Combined with project.name to build bundle ID for iOS and Android apps
-org = "com.mycompany"
+org = "net.kamil"
 
 # project display name that is used as an app title on Android and iOS home screens,
 # shown in window titles and about app dialogs on desktop.
-product = "mobile_app_new"
+product = "RubiksCubeSolver"
 
 # company name to display in about app dialogs
-company = "Flet"
+company = "Kamil"
 
 # copyright text to display in about app dialogs
-copyright = "Copyright (C) 2025 by Flet"
+copyright = "Copyright (C) 2025 by Kamil"
 
 [tool.flet.android.permission] # --android-permissions
 "android.permission.CAMERA" = true

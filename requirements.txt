@@ -3,3 +3,8 @@ mypy-extensions==1.0.0
 packaging==24.1
 pathspec==0.12.1
 platformdirs==4.2.2
+flet==0.26.0
+tensorflow==2.7.0
+opencv-python==4.10.0.84,
+numpy==1.26.4,
+aiohttp==3.9.5
